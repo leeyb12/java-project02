@@ -16,8 +16,8 @@ import api from './api.js';
  * @returns {Promise<{ sessionId: string, startedAt: string }>}
  */
 export async function createSession(params = {}) {
-    const { data } = await api.post('/interviews/sessions', params);
-    return data;
+  const { data } = await api.post('/interviews/sessions', params);
+  return data;
 }
 
 /**
@@ -25,8 +25,8 @@ export async function createSession(params = {}) {
  * @param {string} sessionId
  */
 export async function getSession(sessionId) {
-    const { data } = await api.get(`/interviews/sessions/${sessionId}`);
-    return data;
+  const { data } = await api.get(`/interviews/sessions/${sessionId}`);
+  return data;
 }
 
 /**
@@ -34,8 +34,8 @@ export async function getSession(sessionId) {
  * @param {string} sessionId
  */
 export async function endSession(sessionId) {
-    const { data } = await api.patch(`/interviews/sessions/${sessionId}/end`);
-    return data;
+  const { data } = await api.patch(`/interviews/sessions/${sessionId}/end`);
+  return data;
 }
 
 /* ─── 질문 ─── */
@@ -46,8 +46,8 @@ export async function endSession(sessionId) {
  * @returns {Promise<Array<{ id: string, text: string, category: string, timeLimit: number }>>}
  */
 export async function fetchQuestions(sessionId) {
-    const { data } = await api.get(`/interviews/sessions/${sessionId}/questions`);
-    return data;
+  const { data } = await api.get(`/interviews/sessions/${sessionId}/questions`);
+  return data;
 }
 
 /**
@@ -55,8 +55,8 @@ export async function fetchQuestions(sessionId) {
  * @param {string} questionId
  */
 export async function fetchQuestion(questionId) {
-    const { data } = await api.get(`/interviews/questions/${questionId}`);
-    return data;
+  const { data } = await api.get(`/interviews/questions/${questionId}`);
+  return data;
 }
 
 /* ─── 답변 영상 업로드 ─── */
@@ -72,26 +72,26 @@ export async function fetchQuestion(questionId) {
  * @returns {Promise<{ answerId: string, uploadedAt: string }>}
  */
 export async function submitAnswer(sessionId, questionId, videoBlob, options = {}) {
-    const formData = new FormData();
-    formData.append('video', videoBlob, `answer_${questionId}.webm`);
-    formData.append('sessionId', sessionId);
-    formData.append('questionId', questionId);
+  const formData = new FormData();
+  formData.append('video', videoBlob, `answer_${questionId}.webm`);
+  formData.append('sessionId', sessionId);
+  formData.append('questionId', questionId);
 
-    const { data } = await api.post(
-        `/interviews/sessions/${sessionId}/answers`,
-        formData,
-        {
-            headers: { 'Content-Type': 'multipart/form-data' },
-            onUploadProgress: event => {
-                if (options.onUploadProgress && event.total) {
-                    const percent = Math.round((event.loaded * 100) / event.total);
-                    options.onUploadProgress(percent);
-                }
-            },
+  const { data } = await api.post(
+    `/interviews/sessions/${sessionId}/answers`,
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: event => {
+        if (options.onUploadProgress && event.total) {
+          const percent = Math.round((event.loaded * 100) / event.total);
+          options.onUploadProgress(percent);
         }
-    );
+      },
+    }
+  );
 
-    return data;
+  return data;
 }
 
 /* ─── 피드백 ─── */
@@ -113,8 +113,8 @@ export async function submitAnswer(sessionId, questionId, videoBlob, options = {
  * }>}
  */
 export async function fetchFeedback(sessionId) {
-    const { data } = await api.get(`/interviews/sessions/${sessionId}/feedback`);
-    return data;
+  const { data } = await api.get(`/interviews/sessions/${sessionId}/feedback`);
+  return data;
 }
 
 /* ─── 기기 테스트 ─── */
@@ -125,21 +125,70 @@ export async function fetchFeedback(sessionId) {
  * @returns {Promise<{ ok: boolean, latencyMs: number }>}
  */
 export async function testDeviceUpload(testBlob) {
-    const formData = new FormData();
-    formData.append('test_video', testBlob, 'device_test.webm');
+  const formData = new FormData();
+  formData.append('test_video', testBlob, 'device_test.webm');
 
-    const { data } = await api.post('/interviews/device-test', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 10_000,
-    });
+  const { data } = await api.post('/interviews/device-test', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 10_000,
+  });
 
-    return data;
+  return data;
 }
 
-// 예시: 이력서를 보내고 질문을 받아오는 함수
-export const setupInterview = async (resumeFile) => {
-    const formData = new FormData();
-    formData.append("resume", resumeFile);
-    const response = await api.post('/interview/setup', formData);
-    return response.data; // { sessionId, questions }
-};
+/* ─── 이력서 업로드 & AI 질문 생성 ─── */
+
+/**
+ * 이력서 파일(PDF/DOCX)을 업로드하고 서버에서 텍스트를 추출합니다.
+ * @param {File} file - 사용자가 선택한 이력서 파일
+ * @param {{ onUploadProgress?: (percent: number) => void }} options
+ * @returns {Promise<{ resumeId: string, extractedText: string, parsedInfo: {
+ *   name?: string, skills?: string[], experience?: string[], education?: string[]
+ * }}>}
+ */
+export async function uploadResume(file, options = {}) {
+  const formData = new FormData();
+  formData.append('resume', file, file.name);
+
+  const { data } = await api.post('/interviews/resume/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: event => {
+      if (options.onUploadProgress && event.total) {
+        options.onUploadProgress(Math.round((event.loaded * 100) / event.total));
+      }
+    },
+  });
+
+  return data;
+}
+
+/**
+ * 추출된 이력서 텍스트를 바탕으로 AI가 맞춤 면접 질문을 생성합니다.
+ * @param {{
+ *   resumeId?: string,
+ *   resumeText?: string,
+ *   category: string,
+ *   questionCount: number,
+ *   difficulty?: 'easy'|'medium'|'hard'
+ * }} params
+ * @returns {Promise<Array<{ id: string, text: string, category: string, timeLimit: number, resumeBased: boolean }>>}
+ */
+export async function generateResumeQuestions(params) {
+  const { data } = await api.post('/interviews/resume/generate-questions', params);
+  return data;
+}
+
+/**
+ * 이력서 없이 세션을 생성하면서 동시에 질문도 생성합니다. (기존 방식 유지용)
+ * 이력서가 있으면 resumeId를 함께 전달합니다.
+ * @param {{
+ *   category: string,
+ *   questionCount: number,
+ *   resumeId?: string,
+ *   difficulty?: string
+ * }} params
+ */
+export async function createSessionWithResume(params = {}) {
+  const { data } = await api.post('/interviews/sessions', params);
+  return data;
+}

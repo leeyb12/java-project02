@@ -1,37 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.pknu.interview.mapper.InterviewMapper">
+<mapper namespace="com.pknu26.interview.repository.InterviewMapper">
 
-    <select id="selectSessionListByMemberId" parameterType="string" resultType="map">
-        SELECT 
-            SESSION_ID AS "sessionId",
-            JOB_CATEGORY AS "jobCategory",
-            TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS "createdAt",
-            -- 이력서 내용이 너무 길면 사이드바용으로 앞부분만 잘라서 제공 (선택)
-            DBMS_LOB.SUBSTR(RESUME_CONTENT, 40, 1) AS "titleHint"
-        FROM INTERVIEW_SESSIONS
-        WHERE MEMBER_ID = #{memberId}
-        ORDER BY CREATED_AT DESC
-    </select>
-
-    <select id="selectInterviewDetailsBySessionId" parameterType="string" resultType="map">
-        SELECT 
-            DETAIL_ID AS "detailId",
-            SESSION_ID AS "sessionId",
-            QUESTION_TEXT AS "questionText",
-            USER_ANSWER AS "userAnswer",
-            AI_EVALUATION AS "aiEvaluation",
-            SCORE AS "score",
-            SORT_ORDER AS "sortOrder"
-        FROM INTERVIEW_DETAILS
-        WHERE SESSION_ID = #{sessionId}
-        ORDER BY SORT_ORDER ASC
-    </select>
-
-    <insert id="insertInterviewSession" parameterType="map">
+    <insert id="insertSession" parameterType="com.pknu26.interview.dto.InterviewRequestDto">
         INSERT INTO INTERVIEW_SESSIONS (
             SESSION_ID, 
             MEMBER_ID, 
@@ -39,32 +12,44 @@
             JOB_CATEGORY, 
             CREATED_AT
         ) VALUES (
-            #{sessionId}, 
-            #{memberId}, 
-            #{resumeContent}, 
-            #{jobCategory}, 
+            #{sessionId, jdbcType=VARCHAR}, 
+            #{memberId, jdbcType=VARCHAR}, 
+            #{resumeContent, jdbcType=CLOB}, 
+            #{jobCategory, jdbcType=VARCHAR}, 
             SYSDATE
         )
     </insert>
 
-    <insert id="insertInterviewDetail" parameterType="map">
+    <insert id="insertInterviewDetails" parameterType="java.util.List">
         INSERT INTO INTERVIEW_DETAILS (
             DETAIL_ID, 
             SESSION_ID, 
             QUESTION_TEXT, 
-            USER_ANSWER, 
-            AI_EVALUATION, 
-            SCORE, 
             SORT_ORDER
-        ) VALUES (
-            SEQ_DETAIL_ID.NEXTVAL, 
-            #{sessionId}, 
-            #{questionText}, 
-            #{userAnswer, jdbcType=CLOB}, 
-            #{aiEvaluation, jdbcType=CLOB}, 
-            #{score, jdbcType=NUMERIC}, 
-            #{sortOrder}
         )
+        SELECT SEQ_DETAIL_ID.NEXTVAL, A.* FROM (
+            <foreach collection="list" item="item" separator="UNION ALL">
+                SELECT 
+                    #{item.sessionId} as SESSION_ID, 
+                    #{item.questionText} as QUESTION_TEXT, 
+                    #{item.sortOrder} as SORT_ORDER 
+                FROM DUAL
+            </foreach>
+        ) A
     </insert>
+
+    <select id="getQuestionsBySessionId" resultType="com.pknu26.interview.dto.InterviewResponseDto">
+        SELECT 
+            DETAIL_ID,
+            SESSION_ID,
+            QUESTION_TEXT,
+            USER_ANSWER,
+            AI_EVALUATION,
+            SCORE,
+            SORT_ORDER
+        FROM INTERVIEW_DETAILS
+        WHERE SESSION_ID = #{sessionId}
+        ORDER BY SORT_ORDER ASC
+    </select>
 
 </mapper>
