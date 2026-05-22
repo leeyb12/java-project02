@@ -1,0 +1,43 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.6'
+    id 'io.spring.dependency-management' version '1.1.6' // 1. 최신 스프링 부트 4.x 스펙에 맞춰 플러그인 버전 업그레이드
+}
+
+group = 'com.pknu26'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21) // 2. 그레들 최신 표준 문법으로 Java 21 설정 변경
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // 핵심 웹 및 검증 (잘못된 라이브러리 명칭 대폭 수정)
+    implementation 'org.springframework.boot:spring-boot-starter-web' // 3. 오타 수정 (webmvc -> web)
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // MyBatis (Spring Boot 4.x 환경과 완벽 호환되는 최신 버전 선언)
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:4.0.1'
+
+    // DB 및 개발 편의성
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // 테스트 엔진 통합
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:4.0.1'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

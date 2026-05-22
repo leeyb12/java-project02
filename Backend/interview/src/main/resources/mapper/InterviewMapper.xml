@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pknu26.interview.mapper.InterviewMapper">
+
+    <!-- 여기에 기존에 작성하셨던 select, insert, update 등의 쿼리문을 그대로 두시면 됩니다 -->
+
+</mapper>
