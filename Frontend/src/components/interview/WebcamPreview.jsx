@@ -4,7 +4,6 @@ export default function WebcamPreview({
     stream,
     mirrored = true,
     muted = true,
-    objectFit = 'cover',
     aspectRatio = '16 / 9',
     overlay,
     showNoStreamPlaceholder = true,
@@ -45,7 +44,6 @@ export default function WebcamPreview({
     const videoStyle = {
         width: '100%',
         height: '100%',
-        objectFit,
         transform: mirrored ? 'scaleX(-1)' : 'none',
         display: stream ? 'block' : 'none',
     };

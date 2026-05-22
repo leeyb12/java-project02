@@ -23,7 +23,7 @@ export default function AudioVisualizer({
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             const analyser = ctx.createAnalyser();
-            analyser.fftSize = barCount * 4;
+            analyser.fftSize = barCount * 2;
             analyser.smoothingTimeConstant = smoothing;
 
             const source = ctx.createMediaStreamSource(stream);
