@@ -9,6 +9,16 @@
       "projectName": "interview",
       "args": "",
       "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot-InterviewApplication<Backend>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.pknu26.interview.InterviewApplication",
+      "projectName": "Backend",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
     }
   ]
 }
