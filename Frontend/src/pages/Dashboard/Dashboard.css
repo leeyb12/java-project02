@@ -4,6 +4,7 @@
     position: relative;
     overflow: hidden;
     padding: var(--space-xl) var(--space-lg);
+    background-color: var(--color-bg-base); /* 배경색 명시 */
 }
 
 .dashboard__bg-glow {
@@ -33,34 +34,17 @@
     margin-bottom: var(--space-2xl);
 }
 
-.dashboard__logo {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-sm);
-    margin-bottom: var(--space-xs);
-}
-
-.dashboard__logo-icon {
-    font-size: 28px;
-    color: var(--color-accent-primary);
-}
-
-.dashboard__logo-text {
-    font-family: var(--font-display);
-    font-size: 28px;
+.dashboard__title {
+    font-size: 32px;
     font-weight: 800;
-    letter-spacing: -0.02em;
-    background: linear-gradient(135deg, #f0f0f5, var(--color-accent-primary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    margin-bottom: var(--space-xs);
+    color: var(--color-text-primary);
 }
 
 .dashboard__subtitle {
     font-size: 15px;
     color: var(--color-text-muted);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 /* ─── Grid ─── */
@@ -71,263 +55,177 @@
     align-items: start;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .dashboard__grid {
         grid-template-columns: 1fr;
     }
 }
 
-/* ─── Section Titles ─── */
-.dashboard__section-title {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: var(--space-lg);
-}
-
-.dashboard__step-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    background: var(--color-accent-primary);
-    color: #fff;
-    font-size: 12px;
-    font-weight: 700;
-    border-radius: 50%;
-    font-family: var(--font-mono);
-    flex-shrink: 0;
-}
-
-/* ─── Camera Section ─── */
-.dashboard__camera-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-}
-
-.dashboard__cam-badge {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-full);
-    padding: 4px 10px;
-    font-size: 12px;
-    font-weight: 600;
-    font-family: var(--font-mono);
-    color: #fff;
-    letter-spacing: 0.1em;
-}
-
-.dashboard__rec-dot {
-    width: 8px;
-    height: 8px;
-    background: var(--color-accent-danger);
-    border-radius: 50%;
-    animation: rec-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes rec-pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.3;
-    }
-}
-
-/* ─── Alert ─── */
-.dashboard__alert {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-}
-
-.dashboard__alert--danger {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #fca5a5;
-}
-
-.dashboard__alert--warning {
-    background: rgba(245, 158, 11, 0.1);
-    border: 1px solid rgba(245, 158, 11, 0.3);
-    color: #fcd34d;
-}
-
-/* ─── Device Selects ─── */
-.dashboard__device-selects {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-    margin-top: var(--space-sm);
-}
-
-.dashboard__select-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.dashboard__select {
-    width: 100%;
-    padding: 8px 12px;
+/* ─── Card Base (공통 카드 스타일) ─── */
+.dashboard__card {
     background: var(--color-bg-card);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    color: var(--color-text-primary);
-    font-size: 14px;
-    font-family: var(--font-body);
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2355556a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    padding-right: 32px;
-    transition: border-color var(--transition-fast);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    transition: transform var(--transition-base), border-color var(--transition-base);
 }
 
-.dashboard__select:focus {
-    outline: none;
-    border-color: var(--color-border-active);
+.dashboard__card:hover {
+    border-color: rgba(79, 110, 247, 0.3);
 }
 
-/* ─── Label ─── */
-.dashboard__label {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 6px;
-}
-
-/* ─── Settings Section ─── */
-.dashboard__settings-section {
+.dashboard__card-header {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-lg);
-}
-
-/* ─── Category Grid ─── */
-.dashboard__category-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-sm);
-}
-
-.dashboard__category-btn {
-    display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: var(--space-xs);
-    padding: var(--space-md);
-    background: var(--color-bg-card);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    color: var(--color-text-secondary);
-    font-size: 14px;
-    font-weight: 500;
-    font-family: var(--font-body);
-    cursor: pointer;
-    transition: all var(--transition-base);
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
 }
 
-.dashboard__category-btn:hover {
-    border-color: rgba(79, 110, 247, 0.4);
-    background: var(--color-bg-hover);
-    color: var(--color-text-primary);
-}
-
-.dashboard__category-btn--active {
-    border-color: var(--color-accent-primary) !important;
-    background: rgba(79, 110, 247, 0.1) !important;
-    color: var(--color-accent-primary) !important;
-    box-shadow: var(--shadow-accent);
-}
-
-.dashboard__category-icon {
+.dashboard__card-icon {
     font-size: 24px;
 }
 
-/* ─── Count Buttons ─── */
-.dashboard__count-buttons {
-    display: flex;
-    gap: var(--space-sm);
-}
-
-.dashboard__count-btn {
-    flex: 1;
-    padding: 10px;
-    background: var(--color-bg-card);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    color: var(--color-text-secondary);
-    font-size: 15px;
-    font-weight: 600;
-    font-family: var(--font-body);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.dashboard__count-btn:hover {
-    border-color: rgba(79, 110, 247, 0.4);
+.dashboard__card-title {
+    font-size: 18px;
+    font-weight: 700;
     color: var(--color-text-primary);
 }
 
-.dashboard__count-btn--active {
-    border-color: var(--color-accent-primary) !important;
-    background: rgba(79, 110, 247, 0.1) !important;
-    color: var(--color-accent-primary) !important;
+/* ─── Resume Upload Section (신규) ─── */
+.dashboard__card--upload {
+    background: linear-gradient(145deg, var(--color-bg-card), rgba(79, 110, 247, 0.03));
+    border: 1px solid rgba(79, 110, 247, 0.2);
 }
 
-/* ─── Field ─── */
-.dashboard__field {
+.resume-upload {
     display: flex;
     flex-direction: column;
-    gap: var(--space-xs);
+    gap: var(--space-md);
 }
 
-/* ─── Notice Card ─── */
-.dashboard__notice-title {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: var(--space-sm);
+.file-input-group {
+    position: relative;
+}
+
+.file-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-xl);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    transition: all var(--transition-fast);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.file-label:hover {
+    border-color: var(--color-accent-primary);
+    background: rgba(79, 110, 247, 0.05);
     color: var(--color-text-primary);
+}
+
+.hidden-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+/* ─── Analyzing Overlay (Ollama 로딩 화면) ─── */
+.dashboard__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 11, 20, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.dashboard__loader-box {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-lg);
+}
+
+.dashboard__spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(79, 110, 247, 0.1);
+    border-left-color: var(--color-accent-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.dashboard__loader-box p {
+    color: #fff;
+    font-size: 18px;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+/* ─── Notice & Buttons ─── */
+.dashboard__card-desc {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    margin-bottom: var(--space-lg);
 }
 
 .dashboard__notice-list {
     list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    padding: 0;
 }
 
 .dashboard__notice-list li {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-sm);
     font-size: 13px;
     color: var(--color-text-secondary);
+    margin-bottom: 8px;
+    display: flex;
+    gap: 8px;
 }
 
 .dashboard__notice-list li::before {
-    content: '—';
+    content: "•";
     color: var(--color-accent-primary);
-    flex-shrink: 0;
+}
+
+/* 기존 공통 스타일 변수 유지 */
+:root {
+    --color-bg-base: #0a0b14;
+    --color-bg-card: #141521;
+    --color-bg-hover: #1c1d2e;
+    --color-border: #25263a;
+    --color-accent-primary: #4f6ef7;
+    --color-text-primary: #f0f0f5;
+    --color-text-secondary: #94a3b8;
+    --color-text-muted: #64748b;
+    --space-xs: 8px;
+    --space-sm: 12px;
+    --space-md: 20px;
+    --space-lg: 32px;
+    --space-xl: 48px;
+    --space-2xl: 64px;
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --transition-fast: 0.2s ease;
+    --transition-base: 0.3s ease;
 }

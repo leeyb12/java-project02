@@ -135,3 +135,11 @@ export async function testDeviceUpload(testBlob) {
 
     return data;
 }
+
+// 예시: 이력서를 보내고 질문을 받아오는 함수
+export const setupInterview = async (resumeFile) => {
+    const formData = new FormData();
+    formData.append("resume", resumeFile);
+    const response = await api.post('/interview/setup', formData);
+    return response.data; // { sessionId, questions }
+};
