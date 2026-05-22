@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pknu26.interview.repository.InterviewMapper">
+
+    <insert id="insertSession" parameterType="com.pknu26.interview.dto.InterviewRequestDto">
+        INSERT INTO INTERVIEW_SESSIONS (
+            SESSION_ID, 
+            MEMBER_ID, 
+            RESUME_CONTENT, 
+            JOB_CATEGORY, 
+            CREATED_AT
+        ) VALUES (
+            #{sessionId}, 
+            #{memberId}, 
+            #{resumeContent}, 
+            #{jobCategory}, 
+            SYSDATE
+        )
+    </insert>
+
+    <insert id="insertInterviewDetails" parameterType="java.util.List">
+        INSERT INTO INTERVIEW_DETAILS (
+            DETAIL_ID, 
+            SESSION_ID, 
+            QUESTION_TEXT, 
+            SORT_ORDER
+        )
+        SELECT SEQ_DETAIL_ID.NEXTVAL, A.* FROM (
+            <foreach collection="list" item="item" separator="UNION ALL">
+                SELECT 
+                    #{item.sessionId} as SESSION_ID, 
+                    #{item.questionText} as QUESTION_TEXT, 
+                    #{item.sortOrder} as SORT_ORDER 
+                FROM DUAL
+            </foreach>
+        ) A
+    </insert>
+
+    <select id="getQuestionsBySessionId" resultType="com.pknu26.interview.dto.InterviewResponseDto">
+        SELECT 
+            DETAIL_ID,
+            SESSION_ID,
+            QUESTION_TEXT,
+            USER_ANSWER,
+            AI_EVALUATION,
+            SCORE,
+            SORT_ORDER
+        FROM INTERVIEW_DETAILS
+        WHERE SESSION_ID = #{sessionId}
+        ORDER BY SORT_ORDER ASC
+    </select>
+
+</mapper>
