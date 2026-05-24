@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pknu26.interview.repository.ResumeMapper">
+
+    <!-- 이력서 저장 -->
+    <insert id="insertResume" parameterType="com.pknu26.interview.entity.Resume">
+        INSERT INTO resumes (id, file_name, raw_text, parsed_info_json, created_at)
+        VALUES (#{id}, #{fileName}, #{rawText}, #{parsedInfoJson}, SYSTIMESTAMP)
+    </insert>
+
+    <!-- ID로 조회 -->
+    <select id="findById" parameterType="string"
+            resultType="com.pknu26.interview.entity.Resume">
+        SELECT id,
+               file_name        AS fileName,
+               raw_text         AS rawText,
+               parsed_info_json AS parsedInfoJson,
+               created_at       AS createdAt
+        FROM resumes
+        WHERE id = #{id}
+    </select>
+
+</mapper>

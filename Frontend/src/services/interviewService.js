@@ -81,7 +81,6 @@ export async function submitAnswer(sessionId, questionId, videoBlob, options = {
     `/interviews/sessions/${sessionId}/answers`,
     formData,
     {
-      headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: event => {
         if (options.onUploadProgress && event.total) {
           const percent = Math.round((event.loaded * 100) / event.total);
@@ -129,7 +128,6 @@ export async function testDeviceUpload(testBlob) {
   formData.append('test_video', testBlob, 'device_test.webm');
 
   const { data } = await api.post('/interviews/device-test', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
     timeout: 10_000,
   });
 
@@ -151,7 +149,6 @@ export async function uploadResume(file, options = {}) {
   formData.append('resume', file, file.name);
 
   const { data } = await api.post('/interviews/resume/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
     onUploadProgress: event => {
       if (options.onUploadProgress && event.total) {
         options.onUploadProgress(Math.round((event.loaded * 100) / event.total));

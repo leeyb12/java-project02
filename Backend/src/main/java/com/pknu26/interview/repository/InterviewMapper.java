@@ -10,13 +10,21 @@ import com.pknu26.interview.dto.InterviewResponseDto;
 @Mapper
 public interface InterviewMapper {
 
-    // 세션 정보 저장
-    int insertSession(InterviewRequestDto requestDto);
+    /** 면접 세션 저장 */
+    void insertSession(InterviewRequestDto dto);
 
-    // 생성된 질문들 일괄 저장
-    int insertInterviewDetails(List<InterviewResponseDto> details);
+    /** 면접세션 저장 (세션 전용) */
+    void insertInterviewSession(com.pknu26.interview.entity.InterviewSession session);
 
-    // 특정 세션의 질문 리스트 조회
-    List<InterviewResponseDto> getQuestionBySessionId(String sessionId);
+    /** 면접 질문 목록 저장 */
+    void insertInterviewDetails(List<InterviewResponseDto> questions);
 
+    /** 세션 ID로 면접 세션 조회 */
+    com.pknu26.interview.entity.InterviewSession findSessionById(String sessionId);
+
+    /** 세션 종료 처리 */
+    void endSession(String sessionId);
+
+    /** 세션 ID로 질문 목록 조회 */
+    List<InterviewResponseDto> getQuestionsBySessionId(String sessionId);
 }

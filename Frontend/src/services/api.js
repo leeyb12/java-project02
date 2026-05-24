@@ -1,10 +1,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5173/api/v1',
+    baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
     timeout: 30_000,
     headers: {
-        'Content-Type': 'application/json',
         Accept: 'application/json',
     },
 });
@@ -17,6 +16,12 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        /* multipart/form-data는 브라우저가 boundary를 설정하도록 Content-Type을 제거 */
+        if (config.data instanceof FormData) {
+            delete config.headers['Content-Type'];
+        }
+
         return config;
     },
     error => Promise.reject(error)

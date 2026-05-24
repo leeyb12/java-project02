@@ -38,6 +38,44 @@
         ) A
     </insert>
 
+    <insert id="insertInterviewSession" parameterType="com.pknu26.interview.entity.InterviewSession">
+        INSERT INTO interview_sessions (
+            id,
+            resume_id,
+            category,
+            question_count,
+            status,
+            started_at
+        ) VALUES (
+            #{id},
+            #{resumeId},
+            #{category},
+            #{questionCount},
+            #{status},
+            #{startedAt}
+        )
+    </insert>
+
+    <select id="findSessionById" resultType="com.pknu26.interview.entity.InterviewSession">
+        SELECT
+            id,
+            resume_id AS resumeId,
+            category,
+            question_count AS questionCount,
+            status,
+            started_at AS startedAt,
+            ended_at AS endedAt
+        FROM interview_sessions
+        WHERE id = #{sessionId}
+    </select>
+
+    <update id="endSession" parameterType="string">
+        UPDATE interview_sessions
+        SET status = 'ended',
+            ended_at = SYSDATE
+        WHERE id = #{sessionId}
+    </update>
+
     <select id="getQuestionsBySessionId" resultType="com.pknu26.interview.dto.InterviewResponseDto">
         SELECT 
             DETAIL_ID,

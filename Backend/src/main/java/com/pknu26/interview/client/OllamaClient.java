@@ -1,60 +1,55 @@
 package com.pknu26.interview.client;
 
+import com.pknu26.interview.exception.CustomException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestTemplate;
+
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * 로컬 Ollama AI 엔진과의 HTTP 통신을 전담하는 클라이언트 컴포넌트
- * 외부 연동 로직을 격리하여 서비스 계층이 스파게티 코드가 되는 것을 방지합니다.
- */
+@Slf4j
 @Component
 public class OllamaClient {
 
-    private final WebClient ollamaWebClient;
+    private final RestTemplate restTemplate = new RestTemplate();
 
-    @Value("${ollama.model-name:llama3}")
-    private String modelName;
+    @Value("${ollama.base-url:http://localhost:11434}")
+    private String ollamaBaseUrl;
 
-    // OllamaConfig에서 빈으로 등록된 WebClient를 주입받습니다.
-    public OllamaClient(WebClient ollamaWebClient) {
-        this.ollamaWebClient = ollamaWebClient;
-    }
+    @Value("${ollama.model:qwen3.5:9b}")
+    private String model;
 
     /**
-     * Ollama API(/api/generate)를 호출하여 AI 면접관의 질문/피드백을 받아옵니다.
-     *
-     * @param prompt AI에게 던질 프롬프트 문장
-     * @return AI가 생성한 답변 텍스트
+     * Ollama /api/generate 엔드포인트 호출
+     * @param prompt 전달할 프롬프트 문자열
+     * @return Ollama 응답 문자열
      */
-    public String generateResponse(String prompt) {
-        // 1. 요청 바디 데이터 규격화
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", modelName);
-        requestBody.put("prompt", prompt);
-        requestBody.put("stream", false); // 단발성 응답을 위해 스트리밍 꺼짐
-
+    public String generate(String prompt) {
         try {
-            // 2. WebClient를 활용한 동기식 HTTP POST 요청
-            Map<?, ?> rawResponse = ollamaWebClient.post()
-                    .uri("/api/generate")
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block(); // 결과를 받을 때까지 대기 (Timeout은 OllamaConfig 설정을 따름)
+            Map<String, Object> body = new HashMap<>();
+            body.put("model", model);
+            body.put("prompt", prompt);
+            body.put("stream", false);
 
-            // 3. 안전한 Null 체크 및 응답 데이터 파싱
-            if (rawResponse != null && rawResponse.containsKey("response")) {
-                return ((String) rawResponse.get("response")).trim();
+            Map<?, ?> response = restTemplate.postForObject(
+                    ollamaBaseUrl + "/api/generate",
+                    body,
+                    Map.class
+            );
+
+            if (response == null || !response.containsKey("response")) {
+                throw CustomException.internalError("Ollama 응답이 비어있습니다.");
             }
-            
-            return "AI 면접관의 응답 데이터 구조가 올바르지 않습니다.";
 
+            return (String) response.get("response");
+
+        } catch (CustomException e) {
+            throw e;
         } catch (Exception e) {
-            // 4. 통신 장애 및 예외 발생 시 스파게티 코드가 되지 않도록 깔끔한 에러 메시지 반환
-            return "Ollama AI 서버 통신 실패: " + e.getMessage();
+            log.error("[OllamaClient] Ollama 호출 실패: {}", e.getMessage());
+            throw CustomException.internalError("Ollama 서버 연결에 실패했습니다: " + e.getMessage());
         }
     }
 }

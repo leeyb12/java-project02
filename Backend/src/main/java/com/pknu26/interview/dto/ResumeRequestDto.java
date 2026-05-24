@@ -1,9 +1,9 @@
 package com.pknu26.interview.dto;
 
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Getter
+@Data
 @NoArgsConstructor
 public class ResumeRequestDto {
 

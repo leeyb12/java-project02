@@ -30,12 +30,10 @@ export default function ResumeUpload({ onStart, onComplete, onError }) {
 
         try {
             // 백엔드 API 호출 (Tika 텍스트 추출 및 Ollama 분석 수행)
-            const response = await axios.post('http://localhost:8080/api/interview/setup', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            const response = await axios.post('http://localhost:8080/api/v1/interviews/resume/upload', formData);
 
-            const { sessionId, questions } = response.data;
-            onComplete({ sessionId, questions });
+            const { resumeId, extractedText, parsedInfo } = response.data;
+            onComplete({ resumeId, extractedText, parsedInfo });
         } catch (error) {
             console.error("이력서 분석 실패:", error);
             const errorMsg = error.response?.data?.message || "이력서를 분석하는 중 오류가 발생했습니다.";

@@ -17,39 +17,34 @@ repositories {
 	mavenCentral()
 }
 
-ext {
-	set('springAiVersion', "2.0.0-M6")
-}
-
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	// Spring Boot Web
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// Spring JDBC (DataSource auto-configuration for MyBatis)
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+
+	// WebClient (OllamaClient용)
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:4.0.1'
-	implementation 'org.apache.pdfbox:pdfbox:2.0.30'
-	// implementation 'io.projectreactor.netty:reactor-netty-core:1.1.13'
+
+	// Oracle JDBC
+	implementation 'com.oracle.database.jdbc:ojdbc11:23.3.0.23.09'
+
+	// MyBatis — Spring Framework 7.x (Boot 4.x) 호환 버전
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4'
+
+	// PDF 텍스트 추출 (PDFBox 3.x)
+	implementation 'org.apache.pdfbox:pdfbox:3.0.1'
+
+	// DOCX 텍스트 추출 (Apache POI)
+	implementation 'org.apache.poi:poi-ooxml:5.2.5'
+
+	// Lombok
 	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
 	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:4.0.1'
-	testCompileOnly 'org.projectlombok:lombok'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	testAnnotationProcessor 'org.projectlombok:lombok'
 
-	// WebFlux/WebClient 관련 에러 해결을 위해 Reactor Netty 버전 강제 지정
-    implementation 'io.projectreactor.netty:reactor-netty-core:1.1.22'
-    implementation 'io.projectreactor.netty:reactor-netty-http:1.1.22'
-
-	// 버전을 뒤에 적지 말고 Spring Boot 관리 버전을 따르도록 설정
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
-}
-
-dependencyManagement {
-	imports {
-		mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
-	}
+	// 테스트
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 tasks.named('test') {

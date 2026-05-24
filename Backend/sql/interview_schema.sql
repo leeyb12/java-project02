@@ -1,28 +1,60 @@
--- [1] 면접 세션 테이블: 면접의 큰 틀을 저장
-CREATE TABLE INTERVIEW_SESSIONS (
-    SESSION_ID    VARCHAR2(50)  PRIMARY KEY,    -- UUID 또는 고유 ID
-    MEMBER_ID     VARCHAR2(50)  NOT NULL,       -- 사용자 ID
-    RESUME_CONTENT CLOB          NOT NULL,       -- PDF에서 추출한 이력서 텍스트
-    JOB_CATEGORY  VARCHAR2(100),                -- 지원 직군 (예: 백엔드 개발자)
-    CREATED_AT    TIMESTAMP     DEFAULT SYSDATE -- 생성 일시
+-- ============================================================
+--  Oracle 전용 DDL
+--  실행 순서: resumes → interview_sessions
+-- ============================================================
+
+-- ── 기존 테이블 삭제 (재실행 시) ────────────────────────────────
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE interview_sessions CASCADE CONSTRAINTS';
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE resumes CASCADE CONSTRAINTS';
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+/
+
+-- ── 이력서 테이블 ──────────────────────────────────────────────
+CREATE TABLE resumes (
+    id               VARCHAR2(36)   NOT NULL,
+    file_name        VARCHAR2(255)  NOT NULL,
+    raw_text         CLOB,
+    parsed_info_json CLOB,
+    created_at       TIMESTAMP      DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT pk_resumes PRIMARY KEY (id)
 );
 
--- [2] 면접 상세 테이블: 각 질문과 답변, 피드백을 저장
-CREATE TABLE INTERVIEW_DETAILS (
-    DETAIL_ID     NUMBER        PRIMARY KEY,    -- 시퀀스로 증가할 ID
-    SESSION_ID    VARCHAR2(50)  NOT NULL,       -- 세션 테이블 외래키
-    QUESTION_TEXT CLOB          NOT NULL,       -- AI가 생성한 질문
-    USER_ANSWER   CLOB,                         -- 사용자가 입력한 답변
-    AI_EVALUATION CLOB,                         -- AI의 평가/피드백
-    SCORE         NUMBER(3),                    -- 문항별 점수 (0-100)
-    SORT_ORDER    NUMBER,                       -- 질문 노출 순서
-    CONSTRAINT FK_SESSION_DETAIL FOREIGN KEY (SESSION_ID) 
-    REFERENCES INTERVIEW_SESSIONS(SESSION_ID) ON DELETE CASCADE
+COMMENT ON TABLE  resumes              IS '이력서';
+COMMENT ON COLUMN resumes.id           IS '이력서 UUID';
+COMMENT ON COLUMN resumes.file_name    IS '원본 파일명';
+COMMENT ON COLUMN resumes.raw_text     IS '추출된 전체 텍스트';
+COMMENT ON COLUMN resumes.parsed_info_json IS 'Ollama 파싱 결과 JSON';
+COMMENT ON COLUMN resumes.created_at   IS '업로드 일시';
+
+-- ── 면접 세션 테이블 ────────────────────────────────────────────
+CREATE TABLE interview_sessions (
+    id             VARCHAR2(36)  NOT NULL,
+    resume_id      VARCHAR2(36),
+    category       VARCHAR2(50)  NOT NULL,
+    question_count NUMBER(3)     DEFAULT 5 NOT NULL,
+    status         VARCHAR2(20)  DEFAULT 'active' NOT NULL,
+    started_at     TIMESTAMP     DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    ended_at       TIMESTAMP,
+    CONSTRAINT pk_interview_sessions PRIMARY KEY (id),
+    CONSTRAINT fk_session_resume
+        FOREIGN KEY (resume_id) REFERENCES resumes(id)
+        ON DELETE SET NULL,
+    CONSTRAINT chk_status
+        CHECK (status IN ('active', 'ended'))
 );
 
-CREATE SEQUENCE SEQ_DETAIL_ID 
-START WITH 1 
-INCREMENT BY 1 
-NOCACHE;
-
-COMMIT;
+COMMENT ON TABLE  interview_sessions               IS '면접 세션';
+COMMENT ON COLUMN interview_sessions.id            IS '세션 UUID';
+COMMENT ON COLUMN interview_sessions.resume_id     IS '연결된 이력서 ID (없으면 NULL)';
+COMMENT ON COLUMN interview_sessions.category      IS '면접 카테고리';
+COMMENT ON COLUMN interview_sessions.question_count IS '질문 수';
+COMMENT ON COLUMN interview_sessions.status        IS '세션 상태 (active/ended)';
+COMMENT ON COLUMN interview_sessions.started_at    IS '시작 일시';
+COMMENT ON COLUMN interview_sessions.ended_at      IS '종료 일시';
