@@ -1,5 +1,7 @@
 package com.pknu26.interview.dto;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,4 +21,9 @@ public class ResumeUploadResponseDto {
 
     /** Ollama가 파싱한 구조화 정보 */
     private ParsedInfoDto parsedInfo;
+
+    private String name;
+    private List<String> skills;
+    private List<String> experience;
+    private List<String> education;
 }

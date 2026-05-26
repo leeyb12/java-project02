@@ -11,7 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * Ollama WebClient 빈 설정
  * OllamaClient가 주입받는 WebClient를 여기서 등록합니다.
  */
-@Configuration
+@Configuration // 💡 불필요한 implements WebMvcConfigurer 제거
 public class OllamaConfig {
 
     @Value("${ollama.api.url:http://localhost:11434}")

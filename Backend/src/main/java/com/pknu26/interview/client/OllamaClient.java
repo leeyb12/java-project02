@@ -15,10 +15,10 @@ public class OllamaClient {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    @Value("${ollama.base-url:http://localhost:11434}")
+    @Value("${ollama.api.url:http://localhost:11434}")
     private String ollamaBaseUrl;
 
-    @Value("${ollama.model:qwen3.5:9b}")
+    @Value("${ollama.model.name:qwen3.5:4b}")
     private String model;
 
     /**

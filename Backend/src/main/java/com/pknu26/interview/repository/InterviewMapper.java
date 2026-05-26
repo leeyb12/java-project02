@@ -26,5 +26,6 @@ public interface InterviewMapper {
     void endSession(String sessionId);
 
     /** 세션 ID로 질문 목록 조회 */
-    List<InterviewResponseDto> getQuestionsBySessionId(String sessionId);
+    List<Object> selectAnswersBySessionId(String sessionId);
+    List<InterviewResponseDto> selectQuestionsBySessionId(String sessionId);
 }

@@ -33,6 +33,9 @@ dependencies {
 	// MyBatis — Spring Framework 7.x (Boot 4.x) 호환 버전
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4'
 
+	// Jackson — ObjectMapper (Spring Boot 4.x에서 명시적 선언)
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
+
 	// PDF 텍스트 추출 (PDFBox 3.x)
 	implementation 'org.apache.pdfbox:pdfbox:3.0.1'
 

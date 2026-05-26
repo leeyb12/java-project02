@@ -1,7 +1,8 @@
 package com.pknu26.interview.controller;
 
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pknu26.interview.dto.InterviewResponseDto;
 import com.pknu26.interview.dto.QuestionDto;
 import com.pknu26.interview.dto.ResumeRequestDto;
 import com.pknu26.interview.dto.ResumeUploadResponseDto;
@@ -23,7 +24,7 @@ import java.util.Map;
 
 import java.io.IOException;
 
-@RestController                                  // ① @Controller → @RestController
+@RestController
 @CrossOrigin(origins = "http://localhost:5173")
 @RequestMapping("/api/v1/interviews")
 @RequiredArgsConstructor
@@ -93,8 +94,9 @@ public class ResumeController {
         return ResponseEntity.ok(response);
     }
 
+    // 🔗 @PathVariable에 명시적으로 변수명 지정 ("sessionId")
     @GetMapping("/sessions/{sessionId}")
-    public ResponseEntity<InterviewSession> getSession(@PathVariable String sessionId) {
+    public ResponseEntity<InterviewSession> getSession(@PathVariable("sessionId") String sessionId) {
         InterviewSession session = interviewService.findSessionById(sessionId);
         if (session == null) {
             return ResponseEntity.notFound().build();
@@ -102,31 +104,44 @@ public class ResumeController {
         return ResponseEntity.ok(session);
     }
 
+    // 🔗 @PathVariable에 명시적으로 변수명 지정 ("sessionId")
     @PatchMapping("/sessions/{sessionId}/end")
-    public ResponseEntity<Void> endSession(@PathVariable String sessionId) {
+    public ResponseEntity<Void> endSession(@PathVariable("sessionId") String sessionId) {
         interviewService.endSession(sessionId);
         return ResponseEntity.noContent().build();
     }
 
+    // 🔗 @PathVariable에 명시적으로 변수명 지정 ("sessionId")
     @GetMapping("/sessions/{sessionId}/questions")
-    public ResponseEntity<List<QuestionDto>> getSessionQuestions(@PathVariable String sessionId) {
+    public ResponseEntity<List<InterviewResponseDto>> getSessionQuestions(@PathVariable("sessionId") String sessionId) {
         return ResponseEntity.ok(interviewService.getQuestionsBySessionId(sessionId));
     }
 
+    // 🔗 @PathVariable 및 @RequestParam 명시적 이름 지정
     @PostMapping("/sessions/{sessionId}/answers")
     public ResponseEntity<Map<String, Object>> submitAnswer(
-            @PathVariable String sessionId,
-            @RequestParam(value = "questionId", required = false) String questionId
+            @PathVariable("sessionId") String sessionId,
+            @RequestParam(value = "questionId", required = false) String questionId,
+            @RequestParam(value = "answerText", required = false) String answerText // 💡 답변 텍스트 추가로 받기
     ) {
         Map<String, Object> response = new HashMap<>();
-        response.put("status", "ok");
-        response.put("sessionId", sessionId);
-        response.put("questionId", questionId);
+        
+        // 🔍 답변이 없거나 공백 문자만 있는 경우 0점 처리
+        if (answerText == null || answerText.isBlank()) {
+            response.put("status", "ok");
+            response.put("sessionId", sessionId);
+            response.put("questionId", questionId);
+            response.put("score", 0); // ✨ 0점 부여
+            response.put("feedback", "작성된 답변이 없습니다. 질문에 알맞은 답변을 입력해 주세요.");
+            response.put("keywords", List.of("미제출"));
+            return ResponseEntity.ok(response);
+        }
         return ResponseEntity.ok(response);
     }
 
+    // 🔗 @PathVariable에 명시적으로 변수명 지정 ("sessionId")
     @GetMapping("/sessions/{sessionId}/feedback")
-    public ResponseEntity<Map<String, Object>> getSessionFeedback(@PathVariable String sessionId) {
+    public ResponseEntity<Map<String, Object>> getSessionFeedback(@PathVariable("sessionId") String sessionId) {
         Map<String, Object> response = new HashMap<>();
         response.put("sessionId", sessionId);
         response.put("overallScore", 80);

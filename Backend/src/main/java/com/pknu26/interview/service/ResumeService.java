@@ -1,6 +1,6 @@
 package com.pknu26.interview.service;
 
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pknu26.interview.dto.ParsedInfoDto;
 import com.pknu26.interview.dto.ResumeUploadResponseDto;
 import com.pknu26.interview.entity.Resume;
@@ -76,16 +76,24 @@ public class ResumeService {
         }
     }
 
-    /* ── 업로드 + 파싱 + 저장 통합 ── */
+   /* ── 업로드 + 파싱 + 저장 통합 ── */
     public ResumeUploadResponseDto upload(MultipartFile file) throws IOException {
+        // [디버깅 로그 1단계] 요청 정상 도착 확인
+        System.out.println("====== [1단계] 프론트엔드 이력서 파일 요청 도착 완료 ======");
         validateFile(file);
 
+        // [디버깅 로그 2단계] 텍스트 추출 시작
+        System.out.println("====== [2단계] 파일에서 텍스트 추출 시작 ======");
         String text = extractText(file);
         if (text == null || text.isBlank()) {
             throw CustomException.badRequest("이력서에서 텍스트를 추출할 수 없습니다.");
         }
+        System.out.println("====== [3단계] 텍스트 추출 성공! 글자수: " + text.length() + " ======");
 
+        // [디버깅 로그 4단계] Ollama에게 AI 파싱 요청 (여기가 시간이 오래 걸리는 핵심 길목입니다)
+        System.out.println("====== [4단계] Ollama(로컬 AI)에게 이력서 정보 파싱 요청 시작... ======");
         ParsedInfoDto parsed = parseResumeWithOllama(text);
+        System.out.println("====== [5단계] Ollama 파싱 응답 완료! ======");
 
         Resume resume = Resume.builder()
                 .id(UUID.randomUUID().toString())
@@ -97,11 +105,15 @@ public class ResumeService {
 
         resumeMapper.insertResume(resume);       // .save() → .insertResume()
         log.info("[ResumeService] 이력서 저장 완료 id={}", resume.getId());
+        System.out.println("====== [6단계] DB(MyBatis)에 이력서 데이터 저장 완료! ======");
 
-        return ResumeUploadResponseDto.builder() // ResumeUploadResponse → ResumeUploadResponseDto
+        return ResumeUploadResponseDto.builder()
                 .resumeId(resume.getId())
                 .extractedText(text)
-                .parsedInfo(parsed)
+                .name(parsed.getName())          // parsed 안에서 이름을 꺼내서 바깥으로 추출
+                .skills(parsed.getSkills())      // 스킬 배열 추출
+                .experience(parsed.getExperience()) // 경력 배열 추출
+                .education(parsed.getEducation())   // 학력 배열 추출
                 .build();
     }
 

@@ -58,3 +58,14 @@ COMMENT ON COLUMN interview_sessions.question_count IS '질문 수';
 COMMENT ON COLUMN interview_sessions.status        IS '세션 상태 (active/ended)';
 COMMENT ON COLUMN interview_sessions.started_at    IS '시작 일시';
 COMMENT ON COLUMN interview_sessions.ended_at      IS '종료 일시';
+
+-- 💡 면접 질문 상세 테이블(INTERVIEW_DETAILS) 생성
+CREATE TABLE INTERVIEW_DETAILS (
+    DETAIL_ID     NUMBER PRIMARY KEY,                  -- 질문 PK (시퀀스로 증가)
+    SESSION_ID    VARCHAR2(100) NOT NULL,              -- 면접 세션 ID (외래키 역할)
+    QUESTION_TEXT VARCHAR2(4000) NOT NULL,             -- AI가 생성한 질문 내용
+    USER_ANSWER   CLOB,                                -- 사용자의 답변 데이터
+    AI_EVALUATION CLOB,                                -- AI 피드백/평가 결과
+    SCORE         NUMBER,                              -- 해당 질문 점수
+    SORT_ORDER    NUMBER NOT NULL                      -- 질문 순서 (1, 2, 3...)
+);

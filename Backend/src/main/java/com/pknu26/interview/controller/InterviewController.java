@@ -5,14 +5,13 @@ import com.pknu26.interview.dto.InterviewResponseDto;
 import com.pknu26.interview.service.InterviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Controller
+@RestController // 💡 @Controller + @ResponseBody 기능 통합 (JSON 반환에 최적화)
 @CrossOrigin(origins = "http://localhost:5173")
 @RequestMapping("/api/interview")
 @RequiredArgsConstructor
@@ -22,7 +21,7 @@ public class InterviewController {
 
     @PostMapping("/setup")
     public ResponseEntity<Map<String, Object>> setupInterview(
-            @ModelAttribute InterviewRequestDto requestDto) {
+            @ModelAttribute("interviewRequest") InterviewRequestDto requestDto) { // 🔗 모델명 명시로 바인딩 유연성 확보
         try {
             // 1. 질문 생성
             List<InterviewResponseDto> questions = interviewService.createInterview(requestDto);

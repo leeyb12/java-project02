@@ -1,21 +1,24 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useUserMedia } from '../../hooks/useUserMedia';
-import WebcamPreview from '../../components/interview/WebcamPreview';
-import AudioVisualizer from '../../components/interview/AudioVisualizer';
-import Button from '../../components/common/Button';
-import Card from '../../components/common/Card';
-import Modal from '../../components/common/Modal';
-import { createSessionWithResume, uploadResume } from '../../services/interviewService';
-import './Dashboard.css';
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useUserMedia } from "../../hooks/useUserMedia";
+import WebcamPreview from "../../components/interview/WebcamPreview";
+import AudioVisualizer from "../../components/interview/AudioVisualizer";
+import Button from "../../components/common/Button";
+import Card from "../../components/common/Card";
+import Modal from "../../components/common/Modal";
+import {
+  createSessionWithResume,
+  uploadResume,
+} from "../../services/interviewService";
+import "./Dashboard.css";
 
 const ACCEPTED_TYPES = [
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/msword',
-  'text/plain',
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/msword",
+  "text/plain",
 ];
-const ACCEPTED_EXT = '.pdf,.docx,.doc,.txt';
+const ACCEPTED_EXT = ".pdf,.docx,.doc,.txt";
 const MAX_FILE_MB = 10;
 
 /**
@@ -40,17 +43,17 @@ export default function Dashboard() {
   } = useUserMedia({ video: true, audio: true });
 
   /* 면접 설정 */
-  const [category, setCategory] = useState('general');
+  const [category, setCategory] = useState("general");
   const [questionCount, setQuestionCount] = useState(5);
-  const [selectedCamera, setSelectedCamera] = useState('');
-  const [selectedMic, setSelectedMic] = useState('');
+  const [selectedCamera, setSelectedCamera] = useState("");
+  const [selectedMic, setSelectedMic] = useState("");
 
   /* 이력서 상태 */
-  const [resumeFile, setResumeFile] = useState(null);       // File 객체
-  const [resumeId, setResumeId] = useState(null);           // 서버 업로드 후 ID
-  const [resumeParsed, setResumeParsed] = useState(null);   // 파싱된 이력서 정보
+  const [resumeFile, setResumeFile] = useState(null); // File 객체
+  const [resumeId, setResumeId] = useState(null); // 서버 업로드 후 ID
+  const [resumeParsed, setResumeParsed] = useState(null); // 파싱된 이력서 정보
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState('idle'); // 'idle'|'uploading'|'done'|'error'
+  const [uploadStatus, setUploadStatus] = useState("idle"); // 'idle'|'uploading'|'done'|'error'
   const [uploadError, setUploadError] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -63,14 +66,17 @@ export default function Dashboard() {
   useEffect(() => {
     startMedia();
     return () => stopMedia();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* ── 파일 유효성 검사 ── */
   const validateFile = (file) => {
-    if (!file) return '파일을 선택해 주세요.';
-    if (!ACCEPTED_TYPES.includes(file.type) && !file.name.match(/\.(pdf|docx?|txt)$/i)) {
-      return 'PDF, DOCX, DOC, TXT 파일만 업로드할 수 있습니다.';
+    if (!file) return "파일을 선택해 주세요.";
+    if (
+      !ACCEPTED_TYPES.includes(file.type) &&
+      !file.name.match(/\.(pdf|docx?|txt)$/i)
+    ) {
+      return "PDF, DOCX, DOC, TXT 파일만 업로드할 수 있습니다.";
     }
     if (file.size > MAX_FILE_MB * 1024 * 1024) {
       return `파일 크기는 ${MAX_FILE_MB}MB 이하여야 합니다.`;
@@ -87,7 +93,7 @@ export default function Dashboard() {
     }
 
     setResumeFile(file);
-    setUploadStatus('uploading');
+    setUploadStatus("uploading");
     setUploadProgress(0);
     setUploadError(null);
     setResumeParsed(null);
@@ -99,10 +105,12 @@ export default function Dashboard() {
       });
       setResumeId(result.resumeId);
       setResumeParsed(result.parsedInfo);
-      setUploadStatus('done');
+      setUploadStatus("done");
     } catch (err) {
-      setUploadStatus('error');
-      setUploadError(err.response?.data?.message || '이력서 업로드에 실패했습니다.');
+      setUploadStatus("error");
+      setUploadError(
+        err.response?.data?.message || "이력서 업로드에 실패했습니다.",
+      );
     }
   };
 
@@ -110,11 +118,14 @@ export default function Dashboard() {
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) handleFileUpload(file);
-    e.target.value = '';
+    e.target.value = "";
   };
 
   /* ── drag & drop ── */
-  const handleDragOver = (e) => { e.preventDefault(); setIsDragOver(true); };
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
   const handleDragLeave = () => setIsDragOver(false);
   const handleDrop = (e) => {
     e.preventDefault();
@@ -128,7 +139,7 @@ export default function Dashboard() {
     setResumeFile(null);
     setResumeId(null);
     setResumeParsed(null);
-    setUploadStatus('idle');
+    setUploadStatus("idle");
     setUploadProgress(0);
     setUploadError(null);
   };
@@ -155,14 +166,16 @@ export default function Dashboard() {
       });
       navigate(`/interview/${session.sessionId}`);
     } catch (err) {
-      setStartError(err.message || '세션 생성에 실패했습니다. 다시 시도해 주세요.');
+      setStartError(
+        err.message || "세션 생성에 실패했습니다. 다시 시도해 주세요.",
+      );
       setIsStarting(false);
     }
   };
 
-  const isReady = mediaStatus === 'active';
-  const isDenied = mediaStatus === 'denied';
-  const hasResume = uploadStatus === 'done' && resumeId;
+  const isReady = mediaStatus === "active";
+  const isDenied = mediaStatus === "denied";
+  const hasResume = uploadStatus === "done" && resumeId;
 
   /* ── 파일 크기 포맷 ── */
   const formatFileSize = (bytes) => {
@@ -173,10 +186,10 @@ export default function Dashboard() {
 
   /* ── 파일 아이콘 ── */
   const getFileIcon = (file) => {
-    if (!file) return '📄';
-    if (file.name.endsWith('.pdf')) return '📕';
-    if (file.name.match(/\.docx?$/i)) return '📘';
-    return '📄';
+    if (!file) return "📄";
+    if (file.name.endsWith(".pdf")) return "📕";
+    if (file.name.match(/\.docx?$/i)) return "📘";
+    return "📄";
   };
 
   return (
@@ -204,7 +217,8 @@ export default function Dashboard() {
             {isDenied && (
               <div className="dashboard__alert dashboard__alert--danger">
                 <span>⚠</span>
-                카메라/마이크 권한이 거부되었습니다. 브라우저 설정에서 권한을 허용해 주세요.
+                카메라/마이크 권한이 거부되었습니다. 브라우저 설정에서 권한을
+                허용해 주세요.
               </div>
             )}
             {mediaError && !isDenied && (
@@ -216,7 +230,10 @@ export default function Dashboard() {
 
             <WebcamPreview
               stream={stream}
-              style={{ borderRadius: '16px', border: '1px solid var(--color-border)' }}
+              style={{
+                borderRadius: "16px",
+                border: "1px solid var(--color-border)",
+              }}
               overlay={
                 isReady && (
                   <div className="dashboard__cam-badge">
@@ -227,17 +244,30 @@ export default function Dashboard() {
               }
             />
 
-            <Card variant="outlined" padding="var(--space-md)" style={{ marginTop: '12px' }}>
+            <Card
+              variant="outlined"
+              padding="var(--space-md)"
+              style={{ marginTop: "12px" }}
+            >
               <p className="dashboard__label">마이크 입력</p>
-              <AudioVisualizer stream={stream} active={isReady} height={48} barCount={40} />
+              <AudioVisualizer
+                stream={stream}
+                active={isReady}
+                height={48}
+                barCount={40}
+              />
             </Card>
 
             {devices.cameras.length > 0 && (
               <div className="dashboard__device-selects">
                 <div className="dashboard__select-group">
                   <label className="dashboard__label">카메라</label>
-                  <select value={selectedCamera} onChange={handleCameraChange} className="dashboard__select">
-                    {devices.cameras.map(d => (
+                  <select
+                    value={selectedCamera}
+                    onChange={handleCameraChange}
+                    className="dashboard__select"
+                  >
+                    {devices.cameras.map((d) => (
                       <option key={d.deviceId} value={d.deviceId}>
                         {d.label || `카메라 ${d.deviceId.slice(0, 8)}`}
                       </option>
@@ -246,8 +276,12 @@ export default function Dashboard() {
                 </div>
                 <div className="dashboard__select-group">
                   <label className="dashboard__label">마이크</label>
-                  <select value={selectedMic} onChange={handleMicChange} className="dashboard__select">
-                    {devices.microphones.map(d => (
+                  <select
+                    value={selectedMic}
+                    onChange={handleMicChange}
+                    className="dashboard__select"
+                  >
+                    {devices.microphones.map((d) => (
                       <option key={d.deviceId} value={d.deviceId}>
                         {d.label || `마이크 ${d.deviceId.slice(0, 8)}`}
                       </option>
@@ -260,26 +294,27 @@ export default function Dashboard() {
 
           {/* ── 오른쪽: 이력서 + 면접 설정 ── */}
           <section className="dashboard__settings-section">
-
             {/* ── STEP 02: 이력서 업로드 ── */}
             <h2 className="dashboard__section-title">
               <span className="dashboard__step-badge">02</span>
               이력서 업로드
-              <span className="dashboard__step-optional">선택사항</span>
+              <span className="dashboard__step-optional">필수사항</span>
             </h2>
 
-            {uploadStatus === 'idle' || uploadStatus === 'error' ? (
+            {uploadStatus === "idle" || uploadStatus === "error" ? (
               /* 드래그 앤 드롭 업로드 존 */
               <div
                 ref={dropZoneRef}
-                className={`dashboard__dropzone ${isDragOver ? 'dashboard__dropzone--active' : ''}`}
+                className={`dashboard__dropzone ${isDragOver ? "dashboard__dropzone--active" : ""}`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
                 role="button"
                 tabIndex={0}
-                onKeyDown={e => e.key === 'Enter' && fileInputRef.current?.click()}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && fileInputRef.current?.click()
+                }
                 aria-label="이력서 파일 업로드 영역"
               >
                 <input
@@ -287,50 +322,77 @@ export default function Dashboard() {
                   type="file"
                   accept={ACCEPTED_EXT}
                   onChange={handleFileChange}
-                  style={{ display: 'none' }}
+                  style={{ display: "none" }}
                   aria-hidden="true"
                 />
                 <div className="dashboard__dropzone-icon">📄</div>
                 <p className="dashboard__dropzone-title">
-                  {isDragOver ? '여기에 놓으세요!' : '이력서를 드래그하거나 클릭하여 업로드'}
+                  {isDragOver
+                    ? "여기에 놓으세요!"
+                    : "이력서를 드래그하거나 클릭하여 업로드"}
                 </p>
                 <p className="dashboard__dropzone-desc">
                   PDF, DOCX, DOC, TXT · 최대 {MAX_FILE_MB}MB
                 </p>
-                {uploadStatus === 'error' && uploadError && (
+                {uploadStatus === "error" && uploadError && (
                   <p className="dashboard__dropzone-error">{uploadError}</p>
                 )}
               </div>
-            ) : uploadStatus === 'uploading' ? (
+            ) : uploadStatus === "uploading" ? (
               /* 업로드 진행 중 */
               <div className="dashboard__upload-progress-card">
                 <div className="dashboard__upload-file-row">
-                  <span className="dashboard__upload-icon">{getFileIcon(resumeFile)}</span>
+                  <span className="dashboard__upload-icon">
+                    {getFileIcon(resumeFile)}
+                  </span>
                   <div className="dashboard__upload-file-info">
-                    <span className="dashboard__upload-filename">{resumeFile?.name}</span>
-                    <span className="dashboard__upload-filesize">{formatFileSize(resumeFile?.size ?? 0)}</span>
+                    <span className="dashboard__upload-filename">
+                      {resumeFile?.name}
+                    </span>
+                    <span className="dashboard__upload-filesize">
+                      {formatFileSize(resumeFile?.size ?? 0)}
+                    </span>
                   </div>
-                  <span className="dashboard__upload-pct">{uploadProgress}%</span>
+                  <span className="dashboard__upload-pct">
+                    {uploadProgress}%
+                  </span>
                 </div>
                 <div className="dashboard__upload-bar">
-                  <div className="dashboard__upload-bar-fill" style={{ width: `${uploadProgress}%` }} />
+                  <div
+                    className="dashboard__upload-bar-fill"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
                 </div>
-                <p className="dashboard__upload-status-msg">이력서를 분석하고 있습니다...</p>
+                <p className="dashboard__upload-status-msg">
+                  이력서를 분석하고 있습니다...
+                </p>
               </div>
             ) : (
               /* 업로드 완료 */
               <div className="dashboard__resume-done">
                 <div className="dashboard__resume-done-header">
                   <div className="dashboard__resume-done-left">
-                    <span className="dashboard__upload-icon">{getFileIcon(resumeFile)}</span>
+                    <span className="dashboard__upload-icon">
+                      {getFileIcon(resumeFile)}
+                    </span>
                     <div>
-                      <p className="dashboard__upload-filename">{resumeFile?.name}</p>
-                      <p className="dashboard__upload-filesize">{formatFileSize(resumeFile?.size ?? 0)}</p>
+                      <p className="dashboard__upload-filename">
+                        {resumeFile?.name}
+                      </p>
+                      <p className="dashboard__upload-filesize">
+                        {formatFileSize(resumeFile?.size ?? 0)}
+                      </p>
                     </div>
                   </div>
                   <div className="dashboard__resume-done-badges">
-                    <span className="dashboard__badge dashboard__badge--success">✓ 분석 완료</span>
-                    <button className="dashboard__resume-remove" onClick={handleRemoveResume} aria-label="이력서 제거">
+                    <span className="dashboard__badge dashboard__badge--success">
+                      ✓ 분석 완료
+                    </span>
+                    <button
+                      className="dashboard__resume-remove"
+                      onClick={handleRemoveResume}
+                      aria-label="이력서 제거"
+                    >
                       ✕
                     </button>
                   </div>
@@ -341,16 +403,24 @@ export default function Dashboard() {
                   <div className="dashboard__resume-parsed">
                     {resumeParsed.name && (
                       <div className="dashboard__resume-row">
-                        <span className="dashboard__resume-row-label">이름</span>
-                        <span className="dashboard__resume-row-value">{resumeParsed.name}</span>
+                        <span className="dashboard__resume-row-label">
+                          이름
+                        </span>
+                        <span className="dashboard__resume-row-value">
+                          {resumeParsed.name}
+                        </span>
                       </div>
                     )}
                     {resumeParsed.skills?.length > 0 && (
                       <div className="dashboard__resume-row">
-                        <span className="dashboard__resume-row-label">기술스택</span>
+                        <span className="dashboard__resume-row-label">
+                          기술스택
+                        </span>
                         <div className="dashboard__resume-tags">
-                          {resumeParsed.skills.slice(0, 6).map(s => (
-                            <span key={s} className="dashboard__resume-tag">{s}</span>
+                          {resumeParsed.skills.slice(0, 6).map((s) => (
+                            <span key={s} className="dashboard__resume-tag">
+                              {s}
+                            </span>
                           ))}
                           {resumeParsed.skills.length > 6 && (
                             <span className="dashboard__resume-tag dashboard__resume-tag--more">
@@ -362,8 +432,12 @@ export default function Dashboard() {
                     )}
                     {resumeParsed.experience?.length > 0 && (
                       <div className="dashboard__resume-row">
-                        <span className="dashboard__resume-row-label">경력</span>
-                        <span className="dashboard__resume-row-value">{resumeParsed.experience[0]}</span>
+                        <span className="dashboard__resume-row-label">
+                          경력
+                        </span>
+                        <span className="dashboard__resume-row-value">
+                          {resumeParsed.experience[0]}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -377,7 +451,10 @@ export default function Dashboard() {
             )}
 
             {/* ── STEP 03: 면접 설정 ── */}
-            <h2 className="dashboard__section-title" style={{ marginTop: 'var(--space-lg)' }}>
+            <h2
+              className="dashboard__section-title"
+              style={{ marginTop: "var(--space-lg)" }}
+            >
               <span className="dashboard__step-badge">03</span>
               면접 설정
             </h2>
@@ -385,14 +462,14 @@ export default function Dashboard() {
             {/* 카테고리 */}
             <div className="dashboard__category-grid">
               {[
-                { value: 'general',     label: '일반 면접', icon: '💬' },
-                { value: 'technical',   label: '기술 면접', icon: '💻' },
-                { value: 'behavioral',  label: '행동 면접', icon: '🧠' },
-                { value: 'situational', label: '상황 면접', icon: '🎯' },
-              ].map(item => (
+                { value: "general", label: "일반 면접", icon: "💬" },
+                { value: "technical", label: "기술 면접", icon: "💻" },
+                { value: "behavioral", label: "행동 면접", icon: "🧠" },
+                { value: "situational", label: "상황 면접", icon: "🎯" },
+              ].map((item) => (
                 <button
                   key={item.value}
-                  className={`dashboard__category-btn ${category === item.value ? 'dashboard__category-btn--active' : ''}`}
+                  className={`dashboard__category-btn ${category === item.value ? "dashboard__category-btn--active" : ""}`}
                   onClick={() => setCategory(item.value)}
                 >
                   <span className="dashboard__category-icon">{item.icon}</span>
@@ -405,10 +482,10 @@ export default function Dashboard() {
             <div className="dashboard__field">
               <label className="dashboard__label">질문 수</label>
               <div className="dashboard__count-buttons">
-                {[3, 5, 7, 10].map(n => (
+                {[3, 5, 7, 10].map((n) => (
                   <button
                     key={n}
-                    className={`dashboard__count-btn ${questionCount === n ? 'dashboard__count-btn--active' : ''}`}
+                    className={`dashboard__count-btn ${questionCount === n ? "dashboard__count-btn--active" : ""}`}
                     onClick={() => setQuestionCount(n)}
                   >
                     {n}개
@@ -421,10 +498,11 @@ export default function Dashboard() {
             <Card variant="glass" padding="var(--space-md)">
               <h3 className="dashboard__notice-title">면접 진행 안내</h3>
               <ul className="dashboard__notice-list">
-                {hasResume
-                  ? <li>이력서 기반 맞춤 질문이 자동으로 포함됩니다.</li>
-                  : <li>이력서 업로드 시 맞춤 질문을 받을 수 있습니다.</li>
-                }
+                {hasResume ? (
+                  <li>이력서 기반 맞춤 질문이 자동으로 포함됩니다.</li>
+                ) : (
+                  <li>이력서 업로드 시 맞춤 질문을 받을 수 있습니다.</li>
+                )}
                 <li>조용하고 밝은 공간에서 진행하세요.</li>
                 <li>답변은 타이머 종료 전 자동 저장됩니다.</li>
                 <li>AI가 답변을 분석하여 피드백을 제공합니다.</li>
@@ -440,19 +518,18 @@ export default function Dashboard() {
             <Button
               variant="primary"
               size="lg"
-              disabled={!isReady || uploadStatus === 'uploading'}
+              disabled={!isReady || uploadStatus === "uploading"}
               loading={isStarting}
               onClick={handleStartInterview}
-              style={{ width: '100%', marginTop: '4px' }}
+              style={{ width: "100%", marginTop: "4px" }}
             >
               {!isReady
-                ? '기기 연결 확인 중...'
-                : uploadStatus === 'uploading'
-                  ? '이력서 분석 중...'
+                ? "기기 연결 확인 중..."
+                : uploadStatus === "uploading"
+                  ? "이력서 분석 중..."
                   : hasResume
-                    ? '맞춤 면접 시작하기 →'
-                    : '면접 시작하기 →'
-              }
+                    ? "맞춤 면접 시작하기 →"
+                    : "면접 시작하기 →"}
             </Button>
           </section>
         </div>
@@ -464,7 +541,9 @@ export default function Dashboard() {
         title="상세 설정"
         size="sm"
       >
-        <p style={{ color: 'var(--color-text-secondary)' }}>추가 설정 옵션이 여기에 표시됩니다.</p>
+        <p style={{ color: "var(--color-text-secondary)" }}>
+          추가 설정 옵션이 여기에 표시됩니다.
+        </p>
       </Modal>
     </div>
   );

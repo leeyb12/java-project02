@@ -1,4 +1,4 @@
-import api from './api.js';
+import api from "./api.js";
 
 /**
  * interviewService
@@ -16,7 +16,7 @@ import api from './api.js';
  * @returns {Promise<{ sessionId: string, startedAt: string }>}
  */
 export async function createSession(params = {}) {
-  const { data } = await api.post('/interviews/sessions', params);
+  const { data } = await api.post("/interviews/sessions", params);
   return data;
 }
 
@@ -71,23 +71,28 @@ export async function fetchQuestion(questionId) {
  * @param {{ onUploadProgress?: (percent: number) => void }} options
  * @returns {Promise<{ answerId: string, uploadedAt: string }>}
  */
-export async function submitAnswer(sessionId, questionId, videoBlob, options = {}) {
+export async function submitAnswer(
+  sessionId,
+  questionId,
+  videoBlob,
+  options = {},
+) {
   const formData = new FormData();
-  formData.append('video', videoBlob, `answer_${questionId}.webm`);
-  formData.append('sessionId', sessionId);
-  formData.append('questionId', questionId);
+  formData.append("video", videoBlob, `answer_${questionId}.webm`);
+  formData.append("sessionId", sessionId);
+  formData.append("questionId", questionId);
 
   const { data } = await api.post(
     `/interviews/sessions/${sessionId}/answers`,
     formData,
     {
-      onUploadProgress: event => {
+      onUploadProgress: (event) => {
         if (options.onUploadProgress && event.total) {
           const percent = Math.round((event.loaded * 100) / event.total);
           options.onUploadProgress(percent);
         }
       },
-    }
+    },
   );
 
   return data;
@@ -125,9 +130,9 @@ export async function fetchFeedback(sessionId) {
  */
 export async function testDeviceUpload(testBlob) {
   const formData = new FormData();
-  formData.append('test_video', testBlob, 'device_test.webm');
+  formData.append("test_video", testBlob, "device_test.webm");
 
-  const { data } = await api.post('/interviews/device-test', formData, {
+  const { data } = await api.post("/interviews/device-test", formData, {
     timeout: 10_000,
   });
 
@@ -146,12 +151,19 @@ export async function testDeviceUpload(testBlob) {
  */
 export async function uploadResume(file, options = {}) {
   const formData = new FormData();
-  formData.append('resume', file, file.name);
+  formData.append("resume", file, file.name);
 
-  const { data } = await api.post('/interviews/resume/upload', formData, {
-    onUploadProgress: event => {
+  const { data } = await api.post("/interviews/resume/upload", formData, {
+    // 💡 기존에 180000으로 적혀있던 범인을 600000(10분)으로 대폭 늘립니다.
+    timeout: 600000,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    onUploadProgress: (event) => {
       if (options.onUploadProgress && event.total) {
-        options.onUploadProgress(Math.round((event.loaded * 100) / event.total));
+        options.onUploadProgress(
+          Math.round((event.loaded * 100) / event.total),
+        );
       }
     },
   });
@@ -171,7 +183,10 @@ export async function uploadResume(file, options = {}) {
  * @returns {Promise<Array<{ id: string, text: string, category: string, timeLimit: number, resumeBased: boolean }>>}
  */
 export async function generateResumeQuestions(params) {
-  const { data } = await api.post('/interviews/resume/generate-questions', params);
+  const { data } = await api.post(
+    "/interviews/resume/generate-questions",
+    params,
+  );
   return data;
 }
 
@@ -186,6 +201,6 @@ export async function generateResumeQuestions(params) {
  * }} params
  */
 export async function createSessionWithResume(params = {}) {
-  const { data } = await api.post('/interviews/sessions', params);
+  const { data } = await api.post("/interviews/sessions", params);
   return data;
 }
