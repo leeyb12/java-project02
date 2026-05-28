@@ -15,16 +15,17 @@ export default function Feedback() {
   const [expandedId, setExpandedId] = useState(null);
   const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'answers'
 
-  /* 피드백 데이터 로드 */
+  /* 피드백 데이터 로드 및 검증 */
   useEffect(() => {
     const load = async () => {
       try {
+        let data = null;
+
         if (sessionId) {
-          const data = await fetchFeedback(sessionId);
-          setFeedback(data);
+          data = await fetchFeedback(sessionId);
         } else {
-          /* 개발용 더미 데이터 */
-          setFeedback({
+          /* 개발용 더미 데이터 (테스트를 위해 q1, q2는 null, q3은 가상 url 부여) */
+          data = {
             sessionId: "demo",
             overallScore: 78,
             answers: [
@@ -35,7 +36,7 @@ export default function Feedback() {
                 feedback:
                   "명확하고 간결하게 경력을 소개했습니다. 구체적인 프로젝트 사례를 추가하면 더욱 인상적일 것입니다.",
                 keywords: ["명확성", "간결함", "경력 소개"],
-                videoUrl: null,
+                videoUrl: null, // 👈 0점 처리 대상
               },
               {
                 questionId: "q2",
@@ -44,7 +45,7 @@ export default function Feedback() {
                 feedback:
                   "회사에 대한 기본적인 이해는 있으나, 지원 직무와의 연결성을 더 구체적으로 표현하면 좋겠습니다.",
                 keywords: ["지원 동기", "회사 이해"],
-                videoUrl: null,
+                videoUrl: null, // 👈 0점 처리 대상
               },
               {
                 questionId: "q3",
@@ -53,9 +54,41 @@ export default function Feedback() {
                 feedback:
                   "강점은 잘 설명했으나, 약점에 대한 극복 방안이 부족합니다. 개선 노력을 함께 언급하세요.",
                 keywords: ["자기 인식", "강점", "약점"],
-                videoUrl: null,
+                videoUrl: "https://example.com/demo.mp4", // 👈 정상 점수 유지
               },
             ],
+          };
+        }
+
+        if (data && data.answers) {
+          // 💡 핵심 1: 각 답변을 순회하며 녹음/영상(videoUrl)이 없으면 점수를 0점으로 강제 변환
+          const validatedAnswers = data.answers.map((ans) => {
+            if (!ans.videoUrl) {
+              return {
+                ...ans,
+                score: 0,
+                feedback:
+                  "⚠️ 제출된 대화 녹음 파일이 없어 평가 점수가 0점 처리되었습니다.",
+                keywords: ["녹음 누락"],
+              };
+            }
+            return ans;
+          });
+
+          // 💡 핵심 2: 0점 처리된 점수들을 반영하여 종합 평균 점수(overallScore) 재계산
+          const totalScore = validatedAnswers.reduce(
+            (sum, ans) => sum + ans.score,
+            0,
+          );
+          const newOverallScore =
+            validatedAnswers.length > 0
+              ? Math.round(totalScore / validatedAnswers.length)
+              : 0;
+
+          setFeedback({
+            ...data,
+            overallScore: newOverallScore,
+            answers: validatedAnswers,
           });
         }
       } catch (err) {
@@ -73,14 +106,14 @@ export default function Feedback() {
     if (score >= 80) return { label: "A", color: "#10b981" };
     if (score >= 70) return { label: "B", color: "#4f6ef7" };
     if (score >= 60) return { label: "C", color: "#9999b3" };
-    return { label: "D", color: "#ef4444" }; // 0점 포함
+    return { label: "D", color: "#ef4444" }; // 0점 이하 및 누락은 D등급 처리
   };
 
   const getScoreColor = (score) => {
     if (score >= 80) return "var(--color-accent-success)";
     if (score >= 65) return "var(--color-accent-primary)";
     if (score >= 50) return "var(--color-accent-warning)";
-    return "var(--color-accent-danger)";
+    return "var(--color-accent-danger)"; // 0점은 자동으로 빨간색 처리
   };
 
   if (loading) {
