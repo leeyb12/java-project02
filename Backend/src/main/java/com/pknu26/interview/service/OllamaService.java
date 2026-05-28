@@ -22,9 +22,17 @@ public class OllamaService {
     /**
      * 이력서 기반 면접 질문 생성 — ResumeController에서 호출
      */
-    public String generateQuestions(String resumeText, String category, int count) {
+    public String generateQuestions(String resumeText, String category, int count, String difficulty) {
+        String normalizedCategory = category == null || category.isBlank() ? "general" : category;
+        String normalizedDifficulty = difficulty == null || difficulty.isBlank() ? "medium" : difficulty;
+        String difficultyLabel = switch (normalizedDifficulty.toLowerCase()) {
+            case "easy" -> "쉬운";
+            case "hard" -> "어려운";
+            default -> "보통";
+        };
+
         String prompt = """
-                다음 이력서를 분석하여 %s 면접 질문 %d개를 생성해줘.
+                다음 이력서를 분석하여 %s 난이도의 %s 면접 질문 %d개를 생성해줘.
                 
                 이력서:
                 %s
@@ -33,7 +41,7 @@ public class OllamaService {
                 [
                   {"id":"q_001","text":"질문내용","category":"%s","timeLimit":180,"resumeBased":true}
                 ]
-                """.formatted(category, count, resumeText, category);
+                """.formatted(difficultyLabel, normalizedCategory, count, resumeText, normalizedCategory);
 
         return ollamaClient.generate(prompt);
     }

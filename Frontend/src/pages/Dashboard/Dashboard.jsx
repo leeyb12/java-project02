@@ -44,6 +44,7 @@ export default function Dashboard() {
 
   /* 면접 설정 */
   const [category, setCategory] = useState("general");
+  const [difficulty, setDifficulty] = useState("medium");
   const [questionCount, setQuestionCount] = useState(5);
   const [selectedCamera, setSelectedCamera] = useState("");
   const [selectedMic, setSelectedMic] = useState("");
@@ -161,6 +162,7 @@ export default function Dashboard() {
     try {
       const session = await createSessionWithResume({
         category,
+        difficulty,
         questionCount,
         ...(resumeId ? { resumeId } : {}),
       });
@@ -489,6 +491,26 @@ export default function Dashboard() {
                     onClick={() => setQuestionCount(n)}
                   >
                     {n}개
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 난이도 */}
+            <div className="dashboard__field">
+              <label className="dashboard__label">난이도</label>
+              <div className="dashboard__count-buttons">
+                {[
+                  { value: "easy", label: "쉬움" },
+                  { value: "medium", label: "보통" },
+                  { value: "hard", label: "어려움" },
+                ].map((item) => (
+                  <button
+                    key={item.value}
+                    className={`dashboard__count-btn ${difficulty === item.value ? "dashboard__count-btn--active" : ""}`}
+                    onClick={() => setDifficulty(item.value)}
+                  >
+                    {item.label}
                   </button>
                 ))}
               </div>

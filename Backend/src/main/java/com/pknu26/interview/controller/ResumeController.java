@@ -52,7 +52,8 @@ public class ResumeController {
         String raw = ollamaService.generateQuestions(
                 resume.getRawText(),
                 req.getCategory(),
-                req.getQuestionCount()
+                req.getQuestionCount(),
+                req.getDifficulty()
         );
 
         List<QuestionDto> questions = parseQuestionJson(raw);        // ⑥ 내부 메서드로 분리
@@ -75,16 +76,17 @@ public class ResumeController {
                     ollamaService.generateQuestions(
                             resumeText,
                             req.getCategory(),
-                            questionCount)
+                            questionCount,
+                            req.getDifficulty())
             );
         } catch (Exception e) {
-            questions = getDefaultQuestions(req.getCategory(), questionCount, req.getResumeId() != null);
+            questions = getDefaultQuestions(req.getCategory(), questionCount, req.getResumeId() != null, req.getDifficulty());
         }
 
         InterviewSession session = interviewService.createSessionWithQuestions(
                 req.getResumeId(),
                 req.getCategory(),
-                req.getQuestionCount(),
+                questionCount,
                 questions
         );
 
@@ -164,14 +166,20 @@ public class ResumeController {
         }
     }
 
-    private List<QuestionDto> getDefaultQuestions(String category, int count, boolean resumeBased) {
+    private List<QuestionDto> getDefaultQuestions(String category, int count, boolean resumeBased, String difficulty) {
         List<QuestionDto> defaultQuestions = new ArrayList<>();
         String normalizedCategory = category == null || category.isBlank() ? "general" : category;
+        String normalizedDifficulty = difficulty == null || difficulty.isBlank() ? "medium" : difficulty;
+        String difficultyLabel = switch (normalizedDifficulty.toLowerCase()) {
+            case "easy" -> "쉬운";
+            case "hard" -> "어려운";
+            default -> "보통";
+        };
 
         for (int i = 1; i <= Math.max(count, 3); i++) {
             defaultQuestions.add(QuestionDto.builder()
                     .id("q_" + i)
-                    .text(String.format("[%s] 기본 질문 %d", normalizedCategory, i))
+                    .text(String.format("[%s][%s] 기본 질문 %d", normalizedCategory, difficultyLabel, i))
                     .category(normalizedCategory)
                     .timeLimit(180)
                     .resumeBased(resumeBased)
