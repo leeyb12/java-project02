@@ -76,7 +76,7 @@
         WHERE id = #{sessionId}
     </update>
 
-    <select id="getQuestionsBySessionId" resultType="com.pknu26.interview.dto.InterviewResponseDto">
+    <select id="selectQuestionsBySessionId" resultType="com.pknu26.interview.dto.InterviewResponseDto">
         SELECT 
             DETAIL_ID,
             SESSION_ID,
