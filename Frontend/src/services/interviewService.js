@@ -197,7 +197,8 @@ export async function generateResumeQuestions(params) {
  *   category: string,
  *   questionCount: number,
  *   resumeId?: string,
- *   difficulty?: string
+ *   difficulty?: string,
+ *   useCamera?: boolean
  * }} params
  */
 export async function createSessionWithResume(params = {}) {

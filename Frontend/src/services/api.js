@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "/api/v1",
   // 💡 로컬 AI 속도를 감안하여 타임아웃을 5분(300초)으로 확실하게 늘립니다.
   timeout: 300000,
   headers: {

@@ -31,6 +31,7 @@ export default function Dashboard() {
   const dropZoneRef = useRef(null);
 
   /* 미디어 훅 */
+  const [useCamera, setUseCamera] = useState(true); // 웹캠 사용 여부
   const {
     stream,
     status: mediaStatus,
@@ -40,7 +41,7 @@ export default function Dashboard() {
     stop: stopMedia,
     switchCamera,
     switchMicrophone,
-  } = useUserMedia({ video: true, audio: true });
+  } = useUserMedia({ video: useCamera, audio: true }); // 동적으로 비디오 설정
 
   /* 면접 설정 */
   const [category, setCategory] = useState("general");
@@ -160,10 +161,14 @@ export default function Dashboard() {
     setIsStarting(true);
     setStartError(null);
     try {
+      // 웹캠 설정을 저장
+      sessionStorage.setItem("interviewUseCamera", useCamera.toString());
+
       const session = await createSessionWithResume({
         category,
         difficulty,
         questionCount,
+        useCamera, // 웹캠 사용 여부 전달
         ...(resumeId ? { resumeId } : {}),
       });
       navigate(`/interview/${session.sessionId}`);
@@ -175,8 +180,8 @@ export default function Dashboard() {
     }
   };
 
-  const isReady = mediaStatus === "active";
-  const isDenied = mediaStatus === "denied";
+  const isReady = useCamera ? mediaStatus === "active" : true; // 웹캠 미사용 시 항상 준비됨
+  const isDenied = mediaStatus === "denied" && useCamera; // 웹캠 사용할 때만 거부 체크
   const hasResume = uploadStatus === "done" && resumeId;
 
   /* ── 파일 크기 포맷 ── */
@@ -216,81 +221,125 @@ export default function Dashboard() {
               기기 확인
             </h2>
 
-            {isDenied && (
-              <div className="dashboard__alert dashboard__alert--danger">
-                <span>⚠</span>
-                카메라/마이크 권한이 거부되었습니다. 브라우저 설정에서 권한을
-                허용해 주세요.
-              </div>
-            )}
-            {mediaError && !isDenied && (
-              <div className="dashboard__alert dashboard__alert--warning">
-                <span>⚠</span>
-                {mediaError.message}
-              </div>
-            )}
-
-            <WebcamPreview
-              stream={stream}
-              style={{
-                borderRadius: "16px",
-                border: "1px solid var(--color-border)",
-              }}
-              overlay={
-                isReady && (
-                  <div className="dashboard__cam-badge">
-                    <span className="dashboard__rec-dot" />
-                    LIVE
-                  </div>
-                )
-              }
-            />
-
-            <Card
-              variant="outlined"
-              padding="var(--space-md)"
-              style={{ marginTop: "12px" }}
+            {/* 웹캠 사용 여부 토글 */}
+            <div
+              className="dashboard__field"
+              style={{ marginBottom: "var(--space-md)" }}
             >
-              <p className="dashboard__label">마이크 입력</p>
-              <AudioVisualizer
-                stream={stream}
-                active={isReady}
-                height={48}
-                barCount={40}
-              />
-            </Card>
-
-            {devices.cameras.length > 0 && (
-              <div className="dashboard__device-selects">
-                <div className="dashboard__select-group">
-                  <label className="dashboard__label">카메라</label>
-                  <select
-                    value={selectedCamera}
-                    onChange={handleCameraChange}
-                    className="dashboard__select"
-                  >
-                    {devices.cameras.map((d) => (
-                      <option key={d.deviceId} value={d.deviceId}>
-                        {d.label || `카메라 ${d.deviceId.slice(0, 8)}`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="dashboard__select-group">
-                  <label className="dashboard__label">마이크</label>
-                  <select
-                    value={selectedMic}
-                    onChange={handleMicChange}
-                    className="dashboard__select"
-                  >
-                    {devices.microphones.map((d) => (
-                      <option key={d.deviceId} value={d.deviceId}>
-                        {d.label || `마이크 ${d.deviceId.slice(0, 8)}`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <label className="dashboard__label">카메라 사용</label>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "12px" }}
+              >
+                <input
+                  type="checkbox"
+                  id="useCamera"
+                  checked={useCamera}
+                  onChange={(e) => setUseCamera(e.target.checked)}
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    cursor: "pointer",
+                  }}
+                />
+                <label
+                  htmlFor="useCamera"
+                  style={{ cursor: "pointer", margin: 0 }}
+                >
+                  {useCamera ? "카메라를 사용합니다" : "카메라 없이 진행합니다"}
+                </label>
               </div>
+              <p
+                style={{
+                  fontSize: "0.875rem",
+                  color: "var(--color-text-secondary)",
+                  marginTop: "8px",
+                }}
+              >
+                {useCamera
+                  ? "카메라와 마이크로 녹화됩니다."
+                  : "음성만 녹화되며, 이력서 기반 맞춤 면접을 진행합니다."}
+              </p>
+            </div>
+
+            {useCamera && (
+              <>
+                {isDenied && (
+                  <div className="dashboard__alert dashboard__alert--danger">
+                    <span>⚠</span>
+                    카메라/마이크 권한이 거부되었습니다. 브라우저 설정에서
+                    권한을 허용해 주세요.
+                  </div>
+                )}
+                {mediaError && !isDenied && (
+                  <div className="dashboard__alert dashboard__alert--warning">
+                    <span>⚠</span>
+                    {mediaError.message}
+                  </div>
+                )}
+
+                <WebcamPreview
+                  stream={stream}
+                  style={{
+                    borderRadius: "16px",
+                    border: "1px solid var(--color-border)",
+                  }}
+                  overlay={
+                    mediaStatus === "active" && (
+                      <div className="dashboard__cam-badge">
+                        <span className="dashboard__rec-dot" />
+                        LIVE
+                      </div>
+                    )
+                  }
+                />
+
+                <Card
+                  variant="outlined"
+                  padding="var(--space-md)"
+                  style={{ marginTop: "12px" }}
+                >
+                  <p className="dashboard__label">마이크 입력</p>
+                  <AudioVisualizer
+                    stream={stream}
+                    active={mediaStatus === "active"}
+                    height={48}
+                    barCount={40}
+                  />
+                </Card>
+
+                {devices.cameras.length > 0 && (
+                  <div className="dashboard__device-selects">
+                    <div className="dashboard__select-group">
+                      <label className="dashboard__label">카메라</label>
+                      <select
+                        value={selectedCamera}
+                        onChange={handleCameraChange}
+                        className="dashboard__select"
+                      >
+                        {devices.cameras.map((d) => (
+                          <option key={d.deviceId} value={d.deviceId}>
+                            {d.label || `카메라 ${d.deviceId.slice(0, 8)}`}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="dashboard__select-group">
+                      <label className="dashboard__label">마이크</label>
+                      <select
+                        value={selectedMic}
+                        onChange={handleMicChange}
+                        className="dashboard__select"
+                      >
+                        {devices.microphones.map((d) => (
+                          <option key={d.deviceId} value={d.deviceId}>
+                            {d.label || `마이크 ${d.deviceId.slice(0, 8)}`}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </section>
 
@@ -545,13 +594,17 @@ export default function Dashboard() {
               onClick={handleStartInterview}
               style={{ width: "100%", marginTop: "4px" }}
             >
-              {!isReady
+              {!isReady && useCamera
                 ? "기기 연결 확인 중..."
                 : uploadStatus === "uploading"
                   ? "이력서 분석 중..."
                   : hasResume
-                    ? "맞춤 면접 시작하기 →"
-                    : "면접 시작하기 →"}
+                    ? useCamera
+                      ? "맞춤 면접 시작하기 →"
+                      : "맞춤 음성 면접 시작하기 →"
+                    : useCamera
+                      ? "면접 시작하기 →"
+                      : "음성 면접 시작하기 →"}
             </Button>
           </section>
         </div>

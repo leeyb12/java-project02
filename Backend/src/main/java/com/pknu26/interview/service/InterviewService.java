@@ -63,7 +63,7 @@ public class InterviewService {
         return questions;
     }
 
-    public InterviewSession createSessionWithQuestions(String resumeId, String category, int questionCount, List<QuestionDto> questions) {
+    public InterviewSession createSessionWithQuestions(String resumeId, String category, int questionCount, List<QuestionDto> questions, Boolean useCamera) {
         String sessionId = UUID.randomUUID().toString();
         InterviewSession session = InterviewSession.builder()
                 .id(sessionId)
@@ -72,6 +72,7 @@ public class InterviewService {
                 .questionCount(questionCount > 0 ? questionCount : 5)
                 .status("active")
                 .startedAt(LocalDateTime.now())
+                .useCamera(useCamera != null ? useCamera : true) // 기본값 true
                 .build();
 
         interviewMapper.insertInterviewSession(session);

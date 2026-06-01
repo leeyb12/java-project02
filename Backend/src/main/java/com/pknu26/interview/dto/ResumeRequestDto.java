@@ -18,4 +18,7 @@ public class ResumeRequestDto {
 
     /** 난이도 (easy / medium / hard) — 선택 */
     private String difficulty;
+
+    /** 카메라 사용 여부 (기본값: true) */
+    private Boolean useCamera = true;
 }

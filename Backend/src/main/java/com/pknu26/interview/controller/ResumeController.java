@@ -87,12 +87,14 @@ public class ResumeController {
                 req.getResumeId(),
                 req.getCategory(),
                 questionCount,
-                questions
+                questions,
+                req.getUseCamera() // 웹캠 사용 여부 전달
         );
 
         Map<String, Object> response = new HashMap<>();
         response.put("sessionId", session.getId());
         response.put("startedAt", session.getStartedAt().toString());
+        response.put("useCamera", session.getUseCamera()); // 응답에도 포함
         return ResponseEntity.ok(response);
     }
 

@@ -23,12 +23,17 @@ export default function InterviewRoom() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
 
+  /* 웹캠 사용 여부 (sessionStorage에서 읽기) */
+  const [useCamera, setUseCamera] = useState(
+    sessionStorage.getItem("interviewUseCamera") !== "false",
+  );
+
   /* 미디어 훅 */
   const {
     stream,
     status: mediaStatus,
     start: startMedia,
-  } = useUserMedia({ video: true, audio: true });
+  } = useUserMedia({ video: useCamera, audio: true }); // 동적으로 비디오 설정
   const {
     status: recStatus,
     duration: recDuration,
@@ -58,6 +63,12 @@ export default function InterviewRoom() {
   useEffect(() => {
     const init = async () => {
       try {
+        // sessionStorage에서 useCamera 설정 읽기
+        const cameraUsage = sessionStorage.getItem("interviewUseCamera");
+        if (cameraUsage !== null) {
+          setUseCamera(cameraUsage !== "false");
+        }
+
         await startMedia();
         if (sessionId) {
           const qs = await fetchQuestions(sessionId);
@@ -249,17 +260,50 @@ export default function InterviewRoom() {
       <div className="interview-room__body">
         {/* 왼쪽: 웹캠 & 오디오 */}
         <aside className="interview-room__sidebar">
-          <WebcamPreview
-            stream={stream}
-            overlay={
-              recStatus === "recording" && (
-                <div className="interview-room__rec-indicator">
-                  <span className="interview-room__rec-dot" />
-                  REC {formatTime(recDuration)}
-                </div>
-              )
-            }
-          />
+          {useCamera && (
+            <WebcamPreview
+              stream={stream}
+              overlay={
+                recStatus === "recording" && (
+                  <div className="interview-room__rec-indicator">
+                    <span className="interview-room__rec-dot" />
+                    REC {formatTime(recDuration)}
+                  </div>
+                )
+              }
+            />
+          )}
+
+          {!useCamera && (
+            <div
+              style={{
+                backgroundColor: "var(--color-bg-secondary)",
+                borderRadius: "12px",
+                padding: "32px 16px",
+                textAlign: "center",
+                color: "var(--color-text-secondary)",
+                marginBottom: "12px",
+              }}
+            >
+              <p style={{ fontSize: "48px", marginBottom: "12px" }}>🎙</p>
+              <p style={{ fontWeight: 500, marginBottom: "8px" }}>
+                음성 면접 진행 중
+              </p>
+              <p style={{ fontSize: "0.875rem" }}>마이크로만 진행됩니다.</p>
+              {recStatus === "recording" && (
+                <p
+                  style={{
+                    marginTop: "12px",
+                    color: "var(--color-primary)",
+                    fontSize: "0.875rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  🔴 녹화 중 {formatTime(recDuration)}
+                </p>
+              )}
+            </div>
+          )}
 
           <AudioVisualizer
             stream={stream}
@@ -330,7 +374,7 @@ export default function InterviewRoom() {
                     <Button
                       variant="primary"
                       size="lg"
-                      disabled={mediaStatus !== "active"}
+                      disabled={useCamera && mediaStatus !== "active"}
                       onClick={handleStartAnswer}
                       leftIcon={<span>▶</span>}
                     >

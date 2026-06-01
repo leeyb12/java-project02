@@ -33,4 +33,7 @@ public class InterviewSession {
 
     /** 세션 종료 일시 */
     private LocalDateTime endedAt;
+
+    /** 카메라 사용 여부 */
+    private Boolean useCamera;
 }
