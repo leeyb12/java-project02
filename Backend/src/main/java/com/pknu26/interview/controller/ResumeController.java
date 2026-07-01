@@ -121,37 +121,8 @@ public class ResumeController {
         return ResponseEntity.ok(interviewService.getQuestionsBySessionId(sessionId));
     }
 
-    // 🔗 @PathVariable 및 @RequestParam 명시적 이름 지정
-    @PostMapping("/sessions/{sessionId}/answers")
-    public ResponseEntity<Map<String, Object>> submitAnswer(
-            @PathVariable("sessionId") String sessionId,
-            @RequestParam(value = "questionId", required = false) String questionId,
-            @RequestParam(value = "answerText", required = false) String answerText // 💡 답변 텍스트 추가로 받기
-    ) {
-        Map<String, Object> response = new HashMap<>();
-        
-        // 🔍 답변이 없거나 공백 문자만 있는 경우 0점 처리
-        if (answerText == null || answerText.isBlank()) {
-            response.put("status", "ok");
-            response.put("sessionId", sessionId);
-            response.put("questionId", questionId);
-            response.put("score", 0); // ✨ 0점 부여
-            response.put("feedback", "작성된 답변이 없습니다. 질문에 알맞은 답변을 입력해 주세요.");
-            response.put("keywords", List.of("미제출"));
-            return ResponseEntity.ok(response);
-        }
-        return ResponseEntity.ok(response);
-    }
-
-    // 🔗 @PathVariable에 명시적으로 변수명 지정 ("sessionId")
-    @GetMapping("/sessions/{sessionId}/feedback")
-    public ResponseEntity<Map<String, Object>> getSessionFeedback(@PathVariable("sessionId") String sessionId) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("sessionId", sessionId);
-        response.put("overallScore", 80);
-        response.put("answers", List.of());
-        return ResponseEntity.ok(response);
-    }
+    // 답변 제출(POST /sessions/{id}/answers)과 피드백(GET /sessions/{id}/feedback),
+    // 녹화본 재생은 AnswerController로 분리되었습니다.
 
     /* ── JSON 문자열 → List<QuestionDto> ── */
     private List<QuestionDto> parseQuestionJson(String raw) {

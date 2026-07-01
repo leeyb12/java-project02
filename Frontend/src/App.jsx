@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard/Dashboard';
 import InterviewRoom from './pages/InterviewRoom/InterviewRoom';
 import Feedback from './pages/Feedback/Feedback';
+import WrongNotes from './pages/WrongNotes/WrongNotes';
 
 export default function App() {
   return (
@@ -20,6 +21,9 @@ export default function App() {
         {/* [결과] 리포트 확인 및 오답 분석실 */}
         <Route path="/feedback/:sessionId" element={<Feedback />} />
         <Route path="/feedback" element={<Feedback />} />
+
+        {/* [복습] 면접 오답노트 */}
+        <Route path="/wrong-notes" element={<WrongNotes />} />
 
         {/* 404 폴백 */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

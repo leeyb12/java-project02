@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
-import { fetchFeedback } from "../../services/interviewService";
+import { fetchFeedback, addWrongNote } from "../../services/interviewService";
+import { expressionLabel, EXPRESSION_EMOJI } from "../../utils/vision";
 import "./Feedback.css";
 
 export default function Feedback() {
@@ -13,82 +14,76 @@ export default function Feedback() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'answers'
+  const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'answers' | 'appearance'
+  const [savedNotes, setSavedNotes] = useState({}); // { [questionId]: true }
 
-  /* 피드백 데이터 로드 및 검증 */
+  /* 오답노트에 담기 */
+  const handleAddNote = async (ans) => {
+    try {
+      await addWrongNote({
+        sessionId: sessionId || "demo",
+        answerId: ans.answerId,
+        questionId: ans.questionId,
+        questionText: ans.questionText,
+        answerText: ans.answerText,
+        score: ans.score,
+      });
+      setSavedNotes((prev) => ({ ...prev, [ans.questionId]: true }));
+    } catch {
+      alert("오답노트 저장에 실패했습니다.");
+    }
+  };
+
+  /* 복장·표정 분석 결과 (InterviewRoom이 sessionStorage에 저장) — 첫 렌더 시 1회 로드 */
+  const [analysis] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem(
+        `interviewAnalysis_${sessionId || "demo"}`,
+      );
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  /* 피드백 데이터 로드 */
   useEffect(() => {
     const load = async () => {
       try {
-        let data = null;
-
         if (sessionId) {
-          data = await fetchFeedback(sessionId);
+          /* 서버가 잘한 점/고쳐야 할 점/점수/영상까지 계산해 반환 */
+          const data = await fetchFeedback(sessionId);
+          setFeedback(data);
         } else {
-          /* 개발용 더미 데이터 (테스트를 위해 q1, q2는 null, q3은 가상 url 부여) */
-          data = {
+          /* 개발용 더미 데이터 */
+          setFeedback({
             sessionId: "demo",
-            overallScore: 78,
+            overallScore: 76,
             answers: [
               {
                 questionId: "q1",
                 questionText: "자기소개를 해주세요.",
+                answerText:
+                  "저는 3년차 백엔드 개발자로 커머스 서비스를 개발해 왔습니다.",
                 score: 85,
-                feedback:
-                  "명확하고 간결하게 경력을 소개했습니다. 구체적인 프로젝트 사례를 추가하면 더욱 인상적일 것입니다.",
-                keywords: ["명확성", "간결함", "경력 소개"],
-                videoUrl: null, // 👈 0점 처리 대상
+                strengths: ["경력을 명확하고 간결하게 전달함"],
+                improvements: ["구체적인 프로젝트 성과 수치를 덧붙이면 좋음"],
+                pronunciation: "발음이 또렷하고 전달력이 좋습니다.",
+                behavior: "미소 표정 위주(집중도 72%)",
+                videoUrl: null,
               },
               {
                 questionId: "q2",
                 questionText: "지원 동기가 무엇인가요?",
-                score: 70,
-                feedback:
-                  "회사에 대한 기본적인 이해는 있으나, 지원 직무와의 연결성을 더 구체적으로 표현하면 좋겠습니다.",
-                keywords: ["지원 동기", "회사 이해"],
-                videoUrl: null, // 👈 0점 처리 대상
-              },
-              {
-                questionId: "q3",
-                questionText: "본인의 강점과 약점을 말해주세요.",
-                score: 72,
-                feedback:
-                  "강점은 잘 설명했으나, 약점에 대한 극복 방안이 부족합니다. 개선 노력을 함께 언급하세요.",
-                keywords: ["자기 인식", "강점", "약점"],
-                videoUrl: "https://example.com/demo.mp4", // 👈 정상 점수 유지
+                answerText: "회사의 기술 문화에 매력을 느꼈습니다.",
+                score: 68,
+                strengths: ["회사에 대한 관심을 드러냄"],
+                improvements: ["지원 직무와의 연결성을 더 구체적으로 표현 필요"],
+                pronunciation: "말끝이 흐려지는 구간이 있었습니다.",
+                behavior: "무표정 위주(집중도 60%)",
+                videoUrl: null,
               },
             ],
-          };
-        }
-
-        if (data && data.answers) {
-          // 💡 핵심 1: 각 답변을 순회하며 녹음/영상(videoUrl)이 없으면 점수를 0점으로 강제 변환
-          const validatedAnswers = data.answers.map((ans) => {
-            if (!ans.videoUrl) {
-              return {
-                ...ans,
-                score: 0,
-                feedback:
-                  "⚠️ 제출된 대화 녹음 파일이 없어 평가 점수가 0점 처리되었습니다.",
-                keywords: ["녹음 누락"],
-              };
-            }
-            return ans;
-          });
-
-          // 💡 핵심 2: 0점 처리된 점수들을 반영하여 종합 평균 점수(overallScore) 재계산
-          const totalScore = validatedAnswers.reduce(
-            (sum, ans) => sum + ans.score,
-            0,
-          );
-          const newOverallScore =
-            validatedAnswers.length > 0
-              ? Math.round(totalScore / validatedAnswers.length)
-              : 0;
-
-          setFeedback({
-            ...data,
-            overallScore: newOverallScore,
-            answers: validatedAnswers,
           });
         }
       } catch (err) {
@@ -150,6 +145,13 @@ export default function Feedback() {
             <h1 className="feedback__title">면접 결과 리포트</h1>
           </div>
           <div className="feedback__header-actions">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/wrong-notes")}
+            >
+              오답노트
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => window.print()}>
               리포트 인쇄
             </Button>
@@ -168,6 +170,9 @@ export default function Feedback() {
           {[
             { key: "overview", label: "종합 결과" },
             { key: "answers", label: "답변 분석" },
+            ...(analysis.length > 0
+              ? [{ key: "appearance", label: "복장·표정" }]
+              : []),
           ].map((tab) => (
             <button
               key={tab.key}
@@ -314,27 +319,63 @@ export default function Feedback() {
                         />
                       )}
 
-                      {/* AI 피드백 */}
-                      <div className="feedback__ai-feedback">
-                        <h4 className="feedback__ai-title">
-                          <span>◈</span> AI 분석 피드백
-                        </h4>
-                        <p className="feedback__ai-text">{ans.feedback}</p>
-                      </div>
+                      {/* 내 답변 (STT) */}
+                      {ans.answerText && (
+                        <div className="feedback__answer-text">
+                          <h4 className="feedback__ai-title">
+                            <span>🗣</span> 내 답변
+                          </h4>
+                          <p className="feedback__ai-text">{ans.answerText}</p>
+                        </div>
+                      )}
 
-                      {/* 키워드 태그 */}
-                      {ans.keywords?.length > 0 && (
-                        <div className="feedback__keywords">
-                          <span className="feedback__keywords-label">
-                            평가 키워드
-                          </span>
-                          <div className="feedback__keyword-tags">
-                            {ans.keywords.map((kw) => (
-                              <span key={kw} className="feedback__keyword-tag">
-                                {kw}
-                              </span>
+                      {/* 잘한 점 */}
+                      {ans.strengths?.length > 0 && (
+                        <div className="feedback__ai-feedback feedback__ai-feedback--good">
+                          <h4 className="feedback__ai-title">
+                            <span>👍</span> 잘한 점
+                          </h4>
+                          <ul className="feedback__point-list">
+                            {ans.strengths.map((s, idx) => (
+                              <li key={idx}>{s}</li>
                             ))}
-                          </div>
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* 고쳐야 할 점 */}
+                      {ans.improvements?.length > 0 && (
+                        <div className="feedback__ai-feedback feedback__ai-feedback--bad">
+                          <h4 className="feedback__ai-title">
+                            <span>🔧</span> 고쳐야 할 점
+                          </h4>
+                          <ul className="feedback__point-list">
+                            {ans.improvements.map((s, idx) => (
+                              <li key={idx}>{s}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* 발음 / 행동 */}
+                      {(ans.pronunciation || ans.behavior) && (
+                        <div className="feedback__meta-row">
+                          {ans.pronunciation && (
+                            <div className="feedback__meta-item">
+                              <span className="feedback__meta-label">
+                                🎙 발음/전달력
+                              </span>
+                              <span>{ans.pronunciation}</span>
+                            </div>
+                          )}
+                          {ans.behavior && (
+                            <div className="feedback__meta-item">
+                              <span className="feedback__meta-label">
+                                🙂 행동/표정
+                              </span>
+                              <span>{ans.behavior}</span>
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -359,9 +400,101 @@ export default function Feedback() {
                           {ans.score} / 100
                         </span>
                       </div>
+
+                      {/* 오답노트에 담기 */}
+                      <div className="feedback__note-action">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          disabled={savedNotes[ans.questionId]}
+                          onClick={() => handleAddNote(ans)}
+                        >
+                          {savedNotes[ans.questionId]
+                            ? "✓ 오답노트에 담김"
+                            : "📌 오답노트에 담기"}
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* 복장·표정 분석 탭 */}
+        {activeTab === "appearance" && (
+          <div className="feedback__appearance">
+            {analysis.map((item, i) => {
+              const expr = item.expression;
+              const clo = item.clothing;
+              return (
+                <Card
+                  key={item.questionId || i}
+                  variant="default"
+                  style={{ marginBottom: "12px" }}
+                >
+                  <div className="feedback__appearance-head">
+                    <span className="feedback__answer-index">Q{i + 1}</span>
+                    <span className="feedback__appearance-question">
+                      {item.questionText}
+                    </span>
+                  </div>
+
+                  <div className="feedback__appearance-grid">
+                    {/* 표정 */}
+                    <div className="feedback__appearance-block">
+                      <h4 className="feedback__appearance-subtitle">표정</h4>
+                      {expr ? (
+                        <>
+                          <p className="feedback__appearance-main">
+                            {EXPRESSION_EMOJI[expr.dominant] || "🙂"}{" "}
+                            {expressionLabel(expr.dominant)}
+                          </p>
+                          <p className="feedback__appearance-desc">
+                            표정 집중도 {Math.round((expr.stability ?? 0) * 100)}%
+                            · {expr.samples ?? 0}회 측정
+                          </p>
+                        </>
+                      ) : (
+                        <p className="feedback__appearance-desc">
+                          표정 데이터가 없습니다.
+                        </p>
+                      )}
+                    </div>
+
+                    {/* 복장 */}
+                    <div className="feedback__appearance-block">
+                      <h4 className="feedback__appearance-subtitle">복장</h4>
+                      {clo ? (
+                        <>
+                          <p className="feedback__appearance-main">
+                            {clo.attire || "-"}
+                            {clo.neatness != null && (
+                              <span className="feedback__appearance-tag">
+                                단정함 {clo.neatness}/5
+                              </span>
+                            )}
+                          </p>
+                          {clo.appropriateness && (
+                            <p className="feedback__appearance-desc">
+                              적절성: {clo.appropriateness}
+                            </p>
+                          )}
+                          {clo.comment && (
+                            <p className="feedback__appearance-comment">
+                              {clo.comment}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="feedback__appearance-desc">
+                          복장 분석 결과가 없습니다. (비전 모델 미설치 시 생략됨)
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Card>
               );
             })}
           </div>

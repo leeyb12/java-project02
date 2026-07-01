@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useUserMedia } from "../../hooks/useUserMedia";
 import { useMediaRecorder } from "../../hooks/useMediaRecorder";
+import { useFaceExpression } from "../../hooks/useFaceExpression";
+import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
 import WebcamPreview from "../../components/interview/WebcamPreview";
 import AudioVisualizer from "../../components/interview/AudioVisualizer";
 import Button from "../../components/common/Button";
@@ -10,8 +12,17 @@ import {
   fetchQuestions,
   submitAnswer,
   endSession,
+  analyzeAppearance,
 } from "../../services/interviewService";
+import {
+  captureFrame,
+  expressionLabel,
+  EXPRESSION_EMOJI,
+} from "../../utils/vision";
 import "./InterviewRoom.css";
+
+/** 세션별 복장·표정 분석 결과 sessionStorage 키 */
+const ANALYSIS_KEY = (sid) => `interviewAnalysis_${sid || "demo"}`;
 
 const DEFAULT_TIME_LIMIT = 180; // 기본 3분 (초)
 
@@ -41,6 +52,18 @@ export default function InterviewRoom() {
     stop: stopRecording,
     reset: resetRecording,
   } = useMediaRecorder(stream);
+
+  /* 표정 감지 훅 (브라우저 face-api) */
+  const faceExpr = useFaceExpression();
+
+  /* 답변 음성 → 텍스트 변환 (브라우저 STT) */
+  const speech = useSpeechRecognition({ lang: "ko-KR" });
+
+  /* 표정 감지 및 프레임 캡처용 숨김 video 엘리먼트 */
+  const detectVideoRef = useRef(null);
+
+  /* 질문별 복장·표정 분석 누적 결과 */
+  const analysisRef = useRef([]);
 
   /* 면접 상태 */
   const [questions, setQuestions] = useState([]);
@@ -105,6 +128,21 @@ export default function InterviewRoom() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
+  /* 표정 감지/캡처용 숨김 video에 스트림 연결 */
+  useEffect(() => {
+    const v = detectVideoRef.current;
+    if (!v) return;
+    if (useCamera && stream) {
+      v.srcObject = stream;
+      v.play().catch(() => {});
+    } else {
+      v.srcObject = null;
+    }
+    return () => {
+      if (v) v.srcObject = null;
+    };
+  }, [stream, useCamera]);
+
   /* 타이머 관리 */
   const clearTimer = useCallback(() => {
     clearInterval(timerRef.current);
@@ -121,10 +159,74 @@ export default function InterviewRoom() {
     try {
       const blob = await stopRecording();
 
-      if (blob && sessionId) {
-        await submitAnswer(sessionId, currentQuestion.id, blob, {
-          onUploadProgress: setUploadProgress,
+      /* 답변 음성 → 텍스트 (STT) 종료 및 최종 텍스트 확보 */
+      const answerText = speech.stop();
+
+      /* 복장·표정 분석 (카메라 사용 시): 프레임 1장 캡처 + 표정 요약 */
+      let frame = null;
+      let expressionSummary = null;
+      if (useCamera) {
+        frame = captureFrame(detectVideoRef.current);
+        expressionSummary = faceExpr.summarize();
+        faceExpr.stop();
+      }
+
+      /* 표정 요약 → 행동 코멘트 문자열 */
+      const behavior = expressionSummary
+        ? `${expressionLabel(expressionSummary.dominant)} 표정 위주(집중도 ${Math.round(
+            (expressionSummary.stability ?? 0) * 100,
+          )}%)`
+        : null;
+
+      const questionText =
+        currentQuestion.questionText ?? currentQuestion.text ?? "";
+
+      /* 답변 업로드(+AI 평가) + 복장 분석을 병렬 수행 (분석 실패는 무시) */
+      const tasks = [];
+      if (sessionId) {
+        tasks.push(
+          submitAnswer(sessionId, currentQuestion.id, blob, {
+            answerText,
+            questionText,
+            behavior,
+            onUploadProgress: setUploadProgress,
+          }),
+        );
+      }
+
+      let clothing = null;
+      if (frame && sessionId) {
+        tasks.push(
+          analyzeAppearance(sessionId, {
+            questionId: currentQuestion.id,
+            imageBase64: frame,
+          })
+            .then((res) => {
+              clothing = res?.clothing ?? null;
+            })
+            .catch(() => {
+              /* 비전 모델 미설치/실패 시 조용히 무시 */
+            }),
+        );
+      }
+      await Promise.allSettled(tasks);
+
+      /* 질문별 분석 결과 누적 + sessionStorage 저장 */
+      if (useCamera && (expressionSummary || clothing)) {
+        analysisRef.current.push({
+          questionId: currentQuestion.id,
+          questionText: currentQuestion.questionText,
+          expression: expressionSummary,
+          clothing,
         });
+        try {
+          sessionStorage.setItem(
+            ANALYSIS_KEY(sessionId),
+            JSON.stringify(analysisRef.current),
+          );
+        } catch {
+          /* 저장 실패 무시 */
+        }
       }
 
       resetRecording();
@@ -152,6 +254,9 @@ export default function InterviewRoom() {
     resetRecording,
     isLastQuestion,
     navigate,
+    useCamera,
+    faceExpr,
+    speech,
   ]);
 
   /* 최신 handleSubmitAnswer를 ref로 유지 — interval 클로저에서 stale 참조 방지 */
@@ -187,6 +292,8 @@ export default function InterviewRoom() {
     const limit = currentQuestion?.timeLimit ?? DEFAULT_TIME_LIMIT;
     setPhase("answering");
     startRecording();
+    if (useCamera) faceExpr.start(detectVideoRef.current);
+    speech.start(); // 답변 음성 → 텍스트 변환 시작
     startTimer(limit);
   };
 
@@ -272,6 +379,34 @@ export default function InterviewRoom() {
                 )
               }
             />
+          )}
+
+          {/* 표정 감지/프레임 캡처용 숨김 video */}
+          <video
+            ref={detectVideoRef}
+            autoPlay
+            playsInline
+            muted
+            style={{ display: "none" }}
+          />
+
+          {/* 실시간 표정 표시 */}
+          {useCamera && phase === "answering" && (
+            <div className="interview-room__expression">
+              <span className="interview-room__expression-label">
+                실시간 표정
+              </span>
+              {faceExpr.current ? (
+                <span className="interview-room__expression-value">
+                  {EXPRESSION_EMOJI[faceExpr.current.dominant] || "🙂"}{" "}
+                  {expressionLabel(faceExpr.current.dominant)}
+                </span>
+              ) : (
+                <span className="interview-room__expression-value interview-room__expression-value--muted">
+                  {faceExpr.ready ? "얼굴 인식 중..." : "표정 분석 준비 중..."}
+                </span>
+              )}
+            </div>
           )}
 
           {!useCamera && (
@@ -365,6 +500,25 @@ export default function InterviewRoom() {
                 {phase === "answering" && (
                   <p className="interview-room__hint interview-room__hint--recording">
                     🔴 녹화 중 — 타이머가 종료되면 자동으로 제출됩니다.
+                  </p>
+                )}
+
+                {/* 실시간 답변 자막 (STT) */}
+                {phase === "answering" && speech.supported && (
+                  <div className="interview-room__transcript">
+                    <span className="interview-room__transcript-label">
+                      📝 실시간 답변 인식
+                    </span>
+                    <p className="interview-room__transcript-text">
+                      {speech.transcript || "말씀하시면 자동으로 텍스트로 변환됩니다..."}
+                    </p>
+                  </div>
+                )}
+
+                {phase === "answering" && !speech.supported && (
+                  <p className="interview-room__hint">
+                    ⚠️ 이 브라우저는 음성 인식을 지원하지 않아 답변 텍스트가
+                    저장되지 않습니다. (Chrome 권장)
                   </p>
                 )}
 

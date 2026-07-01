@@ -592,6 +592,57 @@
   background: rgba(79, 110, 247, 0.08);
 }
 
+/* ─── 질문 생성 로딩 오버레이 ─── */
+.dashboard__generating-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 12, 20, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.dashboard__generating-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-xl) var(--space-2xl, 40px);
+  border-radius: 20px;
+  background: var(--color-surface, #171a26);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+
+.dashboard__generating-spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 4px solid rgba(79, 110, 247, 0.2);
+  border-top-color: var(--color-accent-primary);
+  animation: dashboard-spin 0.9s linear infinite;
+}
+
+@keyframes dashboard-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.dashboard__generating-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.dashboard__generating-desc {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
 /* ─── AI Notice ─── */
 .dashboard__resume-ai-notice {
   border-top: 1px solid var(--color-border);

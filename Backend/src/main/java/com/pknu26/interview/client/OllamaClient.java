@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -18,20 +19,40 @@ public class OllamaClient {
     @Value("${ollama.api.url:http://localhost:11434}")
     private String ollamaBaseUrl;
 
-    @Value("${ollama.model.name:qwen3.5:4b}")
+    @Value("${ollama.model.name:gemma4:e2b}")
     private String model;
 
+    @Value("${ollama.vision.model.name:llava}")
+    private String visionModel;
+
     /**
-     * Ollama /api/generate 엔드포인트 호출
+     * Ollama /api/generate 엔드포인트 호출 (텍스트 전용)
      * @param prompt 전달할 프롬프트 문자열
      * @return Ollama 응답 문자열
      */
     public String generate(String prompt) {
+        return call(model, prompt, null);
+    }
+
+    /**
+     * Ollama /api/generate 엔드포인트 호출 (비전 모델 — 이미지 포함)
+     * @param prompt      프롬프트 문자열
+     * @param base64Image data URI 접두어(data:image/...;base64,)가 제거된 순수 base64 이미지
+     * @return Ollama 응답 문자열
+     */
+    public String generateWithImage(String prompt, String base64Image) {
+        return call(visionModel, prompt, base64Image);
+    }
+
+    private String call(String targetModel, String prompt, String base64Image) {
         try {
             Map<String, Object> body = new HashMap<>();
-            body.put("model", model);
+            body.put("model", targetModel);
             body.put("prompt", prompt);
             body.put("stream", false);
+            if (base64Image != null && !base64Image.isBlank()) {
+                body.put("images", List.of(base64Image));
+            }
 
             Map<?, ?> response = restTemplate.postForObject(
                     ollamaBaseUrl + "/api/generate",

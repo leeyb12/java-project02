@@ -203,6 +203,23 @@ export default function Dashboard() {
     <div className="dashboard">
       <div className="dashboard__bg-glow" />
 
+      {/* 질문 생성 로딩 오버레이 */}
+      {isStarting && (
+        <div
+          className="dashboard__generating-overlay"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="dashboard__generating-box">
+            <div className="dashboard__generating-spinner" />
+            <p className="dashboard__generating-title">
+              질문을 생성하고 있습니다.
+            </p>
+            <p className="dashboard__generating-desc">잠시만 기다려주세요...</p>
+          </div>
+        </div>
+      )}
+
       <div className="dashboard__container">
         {/* 헤더 */}
         <header className="dashboard__header">

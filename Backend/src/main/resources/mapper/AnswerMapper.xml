@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pknu26.interview.repository.AnswerMapper">
+
+    <insert id="insertAnswer" parameterType="com.pknu26.interview.entity.Answer">
+        INSERT INTO INTERVIEW_ANSWERS (
+            ANSWER_ID, SESSION_ID, QUESTION_ID, QUESTION_TEXT, ANSWER_TEXT,
+            VIDEO_PATH, SCORE, STRENGTHS, IMPROVEMENTS, PRONUNCIATION, BEHAVIOR, CREATED_AT
+        ) VALUES (
+            #{answerId}, #{sessionId}, #{questionId}, #{questionText}, #{answerText},
+            #{videoPath}, #{score}, #{strengths}, #{improvements}, #{pronunciation}, #{behavior}, SYSTIMESTAMP
+        )
+    </insert>
+
+    <select id="selectAnswersBySessionId" resultType="com.pknu26.interview.entity.Answer">
+        SELECT
+            ANSWER_ID     AS answerId,
+            SESSION_ID    AS sessionId,
+            QUESTION_ID   AS questionId,
+            QUESTION_TEXT AS questionText,
+            ANSWER_TEXT   AS answerText,
+            VIDEO_PATH    AS videoPath,
+            SCORE         AS score,
+            STRENGTHS     AS strengths,
+            IMPROVEMENTS  AS improvements,
+            PRONUNCIATION AS pronunciation,
+            BEHAVIOR      AS behavior,
+            CREATED_AT    AS createdAt
+        FROM INTERVIEW_ANSWERS
+        WHERE SESSION_ID = #{sessionId}
+        ORDER BY CREATED_AT ASC
+    </select>
+
+    <select id="selectAnswerById" resultType="com.pknu26.interview.entity.Answer">
+        SELECT
+            ANSWER_ID     AS answerId,
+            SESSION_ID    AS sessionId,
+            QUESTION_ID   AS questionId,
+            QUESTION_TEXT AS questionText,
+            ANSWER_TEXT   AS answerText,
+            VIDEO_PATH    AS videoPath,
+            SCORE         AS score,
+            STRENGTHS     AS strengths,
+            IMPROVEMENTS  AS improvements,
+            PRONUNCIATION AS pronunciation,
+            BEHAVIOR      AS behavior,
+            CREATED_AT    AS createdAt
+        FROM INTERVIEW_ANSWERS
+        WHERE ANSWER_ID = #{answerId}
+    </select>
+
+</mapper>

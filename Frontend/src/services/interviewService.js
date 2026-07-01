@@ -78,9 +78,15 @@ export async function submitAnswer(
   options = {},
 ) {
   const formData = new FormData();
-  formData.append("video", videoBlob, `answer_${questionId}.webm`);
+  if (videoBlob) {
+    formData.append("video", videoBlob, `answer_${questionId}.webm`);
+  }
   formData.append("sessionId", sessionId);
-  formData.append("questionId", questionId);
+  formData.append("questionId", questionId ?? "");
+  // STT로 변환된 답변 텍스트 / 질문 본문 / 행동(표정) 요약
+  if (options.answerText != null) formData.append("answerText", options.answerText);
+  if (options.questionText != null) formData.append("questionText", options.questionText);
+  if (options.behavior != null) formData.append("behavior", options.behavior);
 
   const { data } = await api.post(
     `/interviews/sessions/${sessionId}/answers`,
@@ -95,6 +101,24 @@ export async function submitAnswer(
     },
   );
 
+  return data;
+}
+
+/* ─── 복장 분석 ─── */
+
+/**
+ * 웹캠 스냅샷(base64 JPEG)을 서버 비전 모델로 보내 복장을 분석합니다.
+ * @param {string} sessionId
+ * @param {{ questionId?: string, imageBase64: string }} params
+ * @returns {Promise<{ sessionId: string, questionId: string, clothing: {
+ *   attire: string, neatness: number|null, appropriateness: string, comment: string
+ * }}>}
+ */
+export async function analyzeAppearance(sessionId, { questionId, imageBase64 }) {
+  const { data } = await api.post(
+    `/interviews/sessions/${sessionId}/appearance`,
+    { questionId, imageBase64 },
+  );
   return data;
 }
 
@@ -118,6 +142,30 @@ export async function submitAnswer(
  */
 export async function fetchFeedback(sessionId) {
   const { data } = await api.get(`/interviews/sessions/${sessionId}/feedback`);
+  return data;
+}
+
+/* ─── 오답노트 ─── */
+
+/**
+ * 오답노트에 담기
+ * @param {{ sessionId?: string, questionId?: string, answerId?: string,
+ *   questionText?: string, answerText?: string, score?: number }} payload
+ */
+export async function addWrongNote(payload) {
+  const { data } = await api.post("/interviews/wrong-notes", payload);
+  return data;
+}
+
+/** 오답노트 목록 조회 */
+export async function fetchWrongNotes() {
+  const { data } = await api.get("/interviews/wrong-notes");
+  return data;
+}
+
+/** 오답노트 삭제 */
+export async function deleteWrongNote(noteId) {
+  const { data } = await api.delete(`/interviews/wrong-notes/${noteId}`);
   return data;
 }
 

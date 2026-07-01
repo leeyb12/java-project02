@@ -152,6 +152,59 @@
   background-color: #10b981;
 }
 
+/* 실시간 표정 표시 */
+.interview-room__expression {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--color-bg-secondary, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.interview-room__expression-label {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #9999b3);
+}
+
+.interview-room__expression-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #fff);
+}
+
+.interview-room__expression-value--muted {
+  font-weight: 400;
+  color: var(--color-text-secondary, #9999b3);
+}
+
+/* 실시간 답변 자막 (STT) */
+.interview-room__transcript {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--color-bg-secondary, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  max-width: 640px;
+}
+
+.interview-room__transcript-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-accent-primary, #4f6ef7);
+  margin-bottom: 6px;
+}
+
+.interview-room__transcript-text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--color-text-primary, #fff);
+  white-space: pre-wrap;
+}
+
 /* 우측 메인: AI 면접관 배치 구역 */
 .interview-room__main {
   flex: 1;

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pknu26.interview.repository.WrongNoteMapper">
+
+    <insert id="insertWrongNote" parameterType="com.pknu26.interview.entity.WrongNote">
+        INSERT INTO WRONG_NOTE (
+            NOTE_ID, SESSION_ID, QUESTION_ID, QUESTION_TEXT, ANSWER_TEXT, IMPROVEMENTS, SCORE, CREATED_AT
+        ) VALUES (
+            #{noteId}, #{sessionId}, #{questionId}, #{questionText}, #{answerText}, #{improvements}, #{score}, SYSTIMESTAMP
+        )
+    </insert>
+
+    <select id="selectAllWrongNotes" resultType="com.pknu26.interview.entity.WrongNote">
+        SELECT
+            NOTE_ID       AS noteId,
+            SESSION_ID    AS sessionId,
+            QUESTION_ID   AS questionId,
+            QUESTION_TEXT AS questionText,
+            ANSWER_TEXT   AS answerText,
+            IMPROVEMENTS  AS improvements,
+            SCORE         AS score,
+            CREATED_AT    AS createdAt
+        FROM WRONG_NOTE
+        ORDER BY CREATED_AT DESC
+    </select>
+
+    <delete id="deleteWrongNote">
+        DELETE FROM WRONG_NOTE WHERE NOTE_ID = #{noteId}
+    </delete>
+
+</mapper>
